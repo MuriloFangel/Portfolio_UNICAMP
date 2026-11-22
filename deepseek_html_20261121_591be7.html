@@ -1,0 +1,1487 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portfólio Digital — DescArte e Processos</title>
+  <style>
+    :root {
+      --bg: #fafafa;
+      --surface: #ffffff;
+      --text: #18181b;
+      --muted: #52525b;
+      --border: #d4d4d8;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 58px 16px 72px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.55;
+      max-width: 1020px;
+      margin-left: auto;
+      margin-right: auto;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .topbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 1000;
+      background: rgba(250, 250, 250, 0.96);
+      border-bottom: 1px solid var(--border);
+      padding: 6px 12px;
+    }
+    .topbar-inner {
+      max-width: 1020px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+    .doc-main-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .controls { display: flex; gap: 6px; flex-shrink: 0; align-items: center; }
+    .btn {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 4px 10px;
+      font-size: 0.78rem;
+      font-family: inherit;
+      cursor: pointer;
+      border-radius: 4px;
+      touch-action: manipulation;
+    }
+    .btn.active-edit { background: #18181b; color: #ffffff; border-color: #18181b; }
+    .btn-danger-sel, .btn-danger-confirm { background: #dc2626; color: #ffffff; border-color: #dc2626; }
+
+    details {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      margin-bottom: 10px;
+      border-radius: 4px;
+    }
+    details.sec-level-1 { border-width: 1.5px; border-color: #a1a1aa; margin-bottom: 14px; }
+    details.sec-level-2 { margin-top: 8px; margin-bottom: 8px; background: #fcfcfc; }
+    details.sec-level-3 { margin-top: 10px; border-style: dashed; background: #ffffff; }
+    details.sec-level-4 { margin-top: 8px; border-style: dotted; background: #fcfcfc; }
+
+    summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 10px 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      user-select: none;
+      touch-action: manipulation;
+      min-width: 0;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary.sum-level-1 { background: #f4f4f5; font-size: clamp(0.98rem, 1.25vw, 1.1rem); }
+    summary.sum-level-2 { font-size: clamp(0.92rem, 1.1vw, 1rem); }
+    summary.sum-level-3 { font-size: clamp(0.88rem, 1vw, 0.95rem); color: var(--muted); }
+    summary.sum-level-4 { font-size: clamp(0.85rem, 0.95vw, 0.9rem); color: var(--muted); }
+
+    .sum-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 0 0 auto;
+      max-width: 100%;
+    }
+    .sum-arrow { display: inline-block; transition: transform 0.15s ease; flex-shrink: 0; }
+    details[open] > summary .sum-arrow { transform: rotate(90deg); }
+    .sum-label { white-space: normal; line-height: 1.3; outline: none; }
+
+    .sum-preview {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 4px;
+      flex: 1 1 0%;
+      min-width: 0;
+      margin-left: 8px;
+      overflow: hidden;
+    }
+    .sum-preview img {
+      width: clamp(24px, 3vw, 32px);
+      height: clamp(24px, 3vw, 32px);
+      object-fit: cover;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: #e4e4e7;
+      flex-shrink: 0;
+    }
+    .sum-count {
+      font-size: 0.72rem;
+      color: var(--muted);
+      background: #e4e4e7;
+      padding: 2px 7px;
+      border-radius: 999px;
+      margin-left: 4px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .sec-content { padding: 12px 16px 16px; }
+    .sec-content p { margin: 0 0 10px; outline: none; }
+    .sec-content ul { margin: 6px 0 12px; padding-left: 20px; }
+    .sec-content li { margin-bottom: 6px; outline: none; }
+
+    /* ESTILOS PARA O MODO DE EDIÇÃO DE TEXTO */
+    body.edit-mode .sum-label[contenteditable="true"],
+    body.edit-mode .sec-content p[contenteditable="true"],
+    body.edit-mode .sec-content li[contenteditable="true"] {
+      outline: 1px dashed #2563eb;
+      background: rgba(37, 99, 235, 0.05);
+      cursor: text;
+      padding: 2px 4px;
+      border-radius: 2px;
+      user-select: text;
+      -webkit-user-select: text;
+    }
+    body.edit-mode .sum-label[contenteditable="true"]:focus,
+    body.edit-mode .sec-content p[contenteditable="true"]:focus,
+    body.edit-mode .sec-content li[contenteditable="true"]:focus {
+      outline: 2px solid #2563eb;
+      background: #fff;
+      box-shadow: 0 0 4px rgba(37, 99, 235, 0.3);
+    }
+
+    .mosaic-grid { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; width: 100%; }
+    .mosaic-row { display: flex; gap: 6px; width: 100%; align-items: stretch; justify-content: flex-start; }
+    .mosaic-tile {
+      position: relative;
+      background: #f4f4f5;
+      border-radius: 4px;
+      overflow: hidden;
+      cursor: zoom-in;
+      flex-shrink: 0;
+    }
+    .mosaic-tile img {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      user-select: none;
+      -webkit-user-drag: none;
+      transition: transform 0.2s ease;
+    }
+    .mosaic-break { display: none; }
+
+    .mosaic-tile.missing {
+      background: #f4f4f5;
+      border: 1px dashed #a1a1aa;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .mosaic-tile.missing img { display: none; }
+    .missing-label {
+      padding: 8px;
+      font-size: 0.72rem;
+      line-height: 1.3;
+      color: #52525b;
+      text-align: center;
+      word-break: break-all;
+    }
+
+    .edit-del-btn, .edit-sel-btn, .add-tile-btn, .edit-only { display: none; }
+    body.edit-mode .edit-only { display: inline-block; }
+    body.edit-mode .edit-bar.edit-only { display: flex; }
+    .edit-bar {
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin: 0 0 12px;
+      padding: 8px 10px;
+      border: 1px dashed var(--border);
+      border-radius: 4px;
+      background: #fff;
+    }
+    .edit-hint { font-size: 0.74rem; color: var(--muted); }
+
+    body.edit-mode .mosaic-tile { cursor: grab; }
+    body.edit-mode .mosaic-tile.dragging { opacity: 0.45; cursor: grabbing; }
+    body.edit-mode .mosaic-tile.selected { outline: 3px solid #2563eb; outline-offset: -3px; }
+    body.edit-mode .mosaic-tile.drag-over { outline: 2px dashed #18181b; outline-offset: -2px; }
+
+    body.edit-mode .edit-del-btn {
+      display: flex; align-items: center; justify-content: center;
+      position: absolute; top: 5px; right: 5px; z-index: 6;
+      width: 24px; height: 24px; border-radius: 999px; border: none;
+      background: rgba(24, 24, 27, 0.78); color: #ffffff; font-size: 14px; cursor: pointer;
+    }
+    body.edit-mode .edit-del-btn:hover { background: #dc2626; }
+
+    body.edit-mode .edit-sel-btn {
+      display: flex; align-items: center; justify-content: center;
+      position: absolute; top: 5px; left: 5px; z-index: 6;
+      width: 24px; height: 24px; border-radius: 4px;
+      border: 1.5px solid #ffffff; background: rgba(24, 24, 27, 0.65);
+      color: #ffffff; font-size: 13px; font-weight: 700; cursor: pointer;
+    }
+    body.edit-mode .mosaic-tile.selected .edit-sel-btn { background: #2563eb; }
+
+    .add-tile-row { display: none; }
+    body.edit-mode .add-tile-row { display: flex; justify-content: flex-start; margin-top: 6px; width: 100%; }
+    .add-tile-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 120px; height: 120px; background: #e4e4e7;
+      border: 2px dashed #a1a1aa; border-radius: 6px; color: #3f3f46; font-size: 2rem; cursor: pointer;
+    }
+
+    .video-box {
+      margin: 14px 0;
+      background: #18181b;
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .video-box video { width: 100%; max-height: 520px; display: block; background: #000; }
+    .video-caption { padding: 8px 12px; background: #f4f4f5; color: var(--muted); font-size: 0.85rem; }
+
+    .modal-backdrop {
+      display: none; position: fixed; inset: 0;
+      background: rgba(9, 9, 11, 0.65); z-index: 10050;
+      align-items: center; justify-content: center; padding: 16px;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal-card {
+      background: #ffffff; color: #18181b; border: 1px solid #d4d4d8;
+      border-radius: 8px; padding: 18px 20px; max-width: 380px; width: 100%;
+    }
+    .modal-card p { margin: 0 0 16px; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; }
+
+    #lightbox {
+      display: none; position: fixed; inset: 0;
+      background: rgba(9, 9, 11, 0.92); z-index: 9999;
+      align-items: center; justify-content: center; overflow: hidden; touch-action: none;
+    }
+    #lightbox.active { display: flex; }
+    .lb-toolbar { position: fixed; top: 12px; right: 14px; z-index: 10001; display: flex; gap: 6px; }
+    .lb-btn {
+      background: rgba(24, 24, 27, 0.85); color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      padding: 6px 11px; border-radius: 4px; font-size: 0.85rem; font-family: inherit; cursor: pointer;
+    }
+    #lightbox-img {
+      max-width: 92vw; max-height: 88vh; object-fit: contain;
+      transform-origin: center center; transition: transform 0.08s ease-out;
+      user-select: none; -webkit-user-drag: none; cursor: grab;
+    }
+    #lightbox-img.dragging { transition: none; cursor: grabbing; }
+
+    #toast {
+      position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%);
+      z-index: 3000; max-width: 90vw; background: #18181b; color: #fff;
+      padding: 10px 14px; border-radius: 6px; font-size: 0.82rem; display: none;
+    }
+    #toast.show { display: block; }
+  </style>
+</head>
+<body class="">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <h1 class="doc-main-title">Portfólio Digital</h1>
+      <div class="controls">
+        <button type="button" class="btn" id="btn-toggle-edit">Editar</button>
+        <button type="button" class="btn" id="btn-rotate-selected" style="display: none;">Rotacionar 90</button>
+        <button type="button" class="btn" id="btn-move-up" style="display: none;">Mover p/ Cima</button>
+        <button type="button" class="btn" id="btn-move-down" style="display: none;">Mover p/ Baixo</button>
+        <button type="button" class="btn btn-danger-sel" id="btn-delete-selected" style="display: none;">Excluir (1)</button>
+        <button type="button" class="btn" id="btn-open-all">Abrir tudo</button>
+        <button type="button" class="btn" id="btn-close-all">Recolher tudo</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="edit-bar edit-only">
+    <button type="button" class="btn" id="btn-save-html">Salvar HTML editado</button>
+    <button type="button" class="btn" id="btn-reset-snapshot">Restaurar original</button>
+    <span class="edit-hint">Arraste as imagens para reorganizar. Clique nos textos (títulos e descrições) para editá-los diretamente.</span>
+  </div>
+
+  <main class="portfolio-root" id="portfolio-root">
+    
+    <!-- SEÇÃO 1: DESCARTE (INTOCÁVEL - CÓPIA EXATA DO ORIGINAL) -->
+    <details class="sec-level-1" id="sec-descarte">
+      <summary class="sum-level-1"><span class="sum-title-wrap"><span class="sum-arrow">▸</span><span class="sum-label">DescArte — Projeto Final (1º Ano, UNESPAR)</span></span></summary>
+      <div class="sec-content">
+        
+        <details class="sec-level-2">
+          <summary class="sum-level-2"><span class="sum-title-wrap"><span class="sum-arrow">▸</span><span class="sum-label">Sobre o projeto</span></span></summary>
+          <div class="sec-content">
+            <p>O <em>DescArte</em> é um projeto artístico-investigativo desenvolvido coletivamente no primeiro ano do curso de Artes Visuais (UNESPAR), articulando diversas disciplinas do ateliê e da pesquisa visual. A investigação parte do lixo urbano como espelho do cotidiano, das desigualdades socioespaciais e da "anestesia estética" das cidades — propondo deslocar o olhar automático para aquilo que costumamos ignorar e ressignificar resíduos como matéria-prima poética e crítica.</p>
+            <div class="mosaic-grid"></div>
+          </div>
+        </details>
+
+        <details class="sec-level-2">
+          <summary class="sum-level-2"><span class="sum-title-wrap"><span class="sum-arrow">▸</span><span class="sum-label">Produções coletivas em ateliê</span></span></summary>
+          <div class="sec-content">
+            
+            <details class="sec-level-3">
+              <summary class="sum-level-3"><span class="sum-title-wrap"><span class="sum-arrow">▸</span><span class="sum-label">Trajetos — Tridimensional, Laboratório de Materiais e FRG</span></span></summary>
+              <div class="sec-content">
+                <p>Desenvolvido coletivamente, este trabalho representa os trajetos individuais dos integrantes do grupo — o modo como cada um percebe o próprio percurso de casa até o ponto central da pesquisa, sinalizado por uma torre central — com forte inspiração na estrutura visual de jogos de tabuleiro e RPGs.</p>
+                <ul>
+                  <li><strong>Tridimensional:</strong> Modelagem e articulação entre objetos tridimensionais e o plano bidimensional.</li>
+                  <li><strong>Laboratório de Materiais:</strong> Exploração de objetos prontos (<em>ready-made</em>), modelados, modificados e pintados, além da experimentação com diversas tintas e técnicas pictóricas.</li>
+                  <li><strong>Fundamentos do Registro Gráfico (FRG):</strong> Composição visual do mapa e organização espacial pensadas para um ponto de vista fixo (zenital/fotográfico).</li>
+                </ul>
+                <p>A conceituação, o planejamento e a execução ocorreram de modo integrado por todo o grupo: mesmo nos trechos referentes ao percurso de um integrante específico, todos intervieram e participaram ativamente da construção coletiva.</p>
+                <p><strong>Minhas participações diretas:</strong> Disposição dos elementos e composição visual; planejamento do ângulo de visualização e registro fotográfico; construção do trilho do trem, do relevo e da rua com bicicleta; e queima controlada com fogo para criar as bordas irregulares da peça.</p>
+                <div class="mosaic-grid">
+                  <div class="mosaic-row"><div class="mosaic-tile" style="height: 330.008px; width: 440px; flex: 0 0 440px;"><img data-fn="percursos-descarte-2.jpg" alt="percursos-descarte-2.jpg" decoding="async" style="width: 440px; height: 330.008px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="1.3333" data-base-ratio="1.3333" data-thumb-src="./thumbs/percursos-descarte-2.jpg.jpg" data-full-src="./percursos-descarte-2.jpg" data-medium-src="./medium/percursos-descarte-2.jpg.jpg"></div><div class="mosaic-tile" style="height: 330.008px; width: 440px; flex: 0 0 440px;"><img data-fn="percursos-descarte.jpg" alt="percursos-descarte.jpg" decoding="async" style="width: 440px; height: 330.008px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="1.3333" data-base-ratio="1.3333" data-thumb-src="./thumbs/percursos-descarte.jpg.jpg" data-full-src="./percursos-descarte.jpg" data-medium-src="./medium/percursos-descarte.jpg.jpg"></div></div></div>
+              </div>
+            </details>
+
+            <details class="sec-level-3">
+              <summary class="sum-level-3"><span class="sum-title-wrap"><span class="sum-arrow">▸</span><span class="sum-label">Terras do Descarte (Cartografia Pictórica) — Desenho, FRG, FLV e Pintura</span></span></summary>
+              <div class="sec-content">
+                <p>Produzido coletivamente, este mapa pictórico traduz de forma territorial a divisão temática da produção, do destino e da permanência do lixo na cidade, bem como seus efeitos sociais. Inspirada nas cartografias das Grandes Navegações, a obra converte categorias temáticas e afetivas em acidentes geográficos — como bacias, ilhas e mares.</p>
+                <ul>
+                  <li><strong>Desenho:</strong> Construção do mapa pictórico a partir da projeção de grãos em uma mesa de luz para traçar a geografia inicial da cartografia.</li>
+                  <li><strong>Pintura:</strong> Exploração do círculo cromático (cores análogas e complementares) não apenas pelo aspecto formal, mas pelos contrastes e sentidos emocionais evocadas por cada zona.</li>
+                  <li><strong>Fundamentos do Registro Gráfico (FRG):</strong> Organização e equilíbrio compositivo do mapa.</li>
+                  <li><strong>Fundamentos da Linguagem Visual (FLV):</strong> Pesquisa de texturas gráficas e pictóricas com materiais riscantes e tintas.</li>
+                </ul>
+                <p>Todo o processo — da conceituação à execução — foi compartilhado sem divisão rígida de áreas por autor, mesclando o gesto de todos a partir de planejamento e discussão prévios.</p>
+                <p><strong>Minhas participações diretas:</strong> Desenhos e representações figurativas com materiais riscantes (especialmente com uso de hachuras); investigação da divisão social e afetiva dos dejetos; e criação das nomeações da cartografia.</p>
+                <div class="mosaic-grid">
+                  <div class="mosaic-row"><div class="mosaic-tile" style="height: 422.407px; width: 563.195px; flex: 0 0 563.195px;"><img data-fn="cartografia-terras-descarte-2.jpg" alt="cartografia-terras-descarte-2.jpg" decoding="async" style="width: 422.407px; height: 563.195px; transform: translate(-50%, -50%) rotate(270deg);" data-ratio="1.3333" data-base-ratio="0.7500" data-thumb-src="./thumbs/cartografia-terras-descarte-2.jpg.jpg" data-full-src="./cartografia-terras-descarte-2.jpg" data-medium-src="./medium/cartografia-terras-descarte-2.jpg.jpg" data-rotation="270"></div><div class="mosaic-tile" style="height: 422.407px; width: 316.805px; flex: 0 0 316.805px;"><img data-fn="cartografia-terras-descarte.jpg" alt="cartografia-terras-descarte.jpg" decoding="async" style="width: 316.805px; height: 422.407px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.7500" data-base-ratio="0.7500" data-thumb-src="./thumbs/cartografia-terras-descarte.jpg.jpg" data-full-src="./cartografia-terras-descarte.jpg" data-medium-src="./medium/cartografia-terras-descarte.jpg.jpg"></div></div></div>
+                
+                <details class="sec-level-4">
+                  <summary class="sum-level-4"><span class="sum-title-wrap"><span class="sum-arrow">▸</span><span class="sum-label">Processo de criação</span></span></summary>
+                  <div class="sec-content">
+                    <div class="mosaic-grid">
+                      <div class="mosaic-row"><div class="mosaic-tile" style="height: 373.333px; width: 280px; flex: 0 0 280px;"><img data-fn="processo-cartografia-projeção.jpg" alt="processo-cartografia-projeção.jpg" decoding="async" style="width: 280px; height: 373.333px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.7500" data-base-ratio="0.7500" data-thumb-src="./thumbs/processo-cartografia-proje%C3%A7%C3%A3o.jpg.jpg" data-full-src="./processo-cartografia-proje%C3%A7%C3%A3o.jpg" data-medium-src="./medium/processo-cartografia-proje%C3%A7%C3%A3o.jpg.jpg"></div><div class="mosaic-tile" style="height: 373.333px; width: 280px; flex: 0 0 280px;"><img data-fn="processo-cartografia.jpg" alt="processo-cartografia.jpg" decoding="async" style="width: 280px; height: 373.333px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.7500" data-base-ratio="0.7500" data-thumb-src="./thumbs/processo-cartografia.jpg.jpg" data-full-src="./processo-cartografia.jpg" data-medium-src="./medium/processo-cartografia.jpg.jpg"></div><div class="mosaic-tile" style="height: 373.333px; width: 280px; flex: 0 0 280px;"><img data-fn="processo-cartografia-desenho.jpg" alt="processo-cartografia-desenho.jpg" decoding="async" style="width: 280px; height: 373.333px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.7500" data-base-ratio="0.7500" data-thumb-src="./thumbs/processo-cartografia-desenho.jpg.jpg" data-full-src="./processo-cartografia-desenho.jpg" data-medium-src="./medium/processo-cartografia-desenho.jpg.jpg"></div></div></div>
+                  </div>
+                </details>
+              </div>
+            </details>
+
+            <details class="sec-level-3">
+              <summary class="sum-level-3"><span class="sum-title-wrap"><span class="sum-arrow">▸</span><span class="sum-label">Carnaval — Laboratório de Materiais e Desenho</span></span></summary>
+              <div class="sec-content">
+                <p>Criado coletivamente, o título deste trabalho dialoga diretamente com sua metodologia: um processo aberto, desordenado e não linear, construído a partir de descartes trazidos de casa por cada integrante e explorados livremente sobre o suporte. A obra dialoga com os vestígios materiais que a própria festa deixa para trás, atravessados por memórias, afetos, coletividade e subjetividade. Desde o início, a proposta partiu da desordem e do acúmulo para investigar como, mesmo em meio ao caos, emerge uma intencionalidade compositiva — visível nas bordas, nos saltos tridimensionais dos objetos e nos novos significados criados pelo encontro dos materiais.</p>
+                <ul>
+                  <li><strong>Desenho:</strong> Exploração de materiais não convencionais sobre suporte plano.</li>
+                  <li><strong>Laboratório de Materiais:</strong> Ressignificação de objetos descartados e procedimentos de <em>assemblage</em>.</li>
+                </ul>
+                <p>A execução ocorreu de forma totalmente integrada, sem delimitação de zonas individuais, negociando coletivamente a natureza desse "caos" ao longo do fazer.</p>
+                <div class="mosaic-grid">
+                  <div class="mosaic-row"><div class="mosaic-tile" style="height: 664.517px; width: 886px; flex: 0 0 886px;"><img data-fn="carnaval-descarte.jpg" alt="carnaval-descarte.jpg" decoding="async" style="width: 886px; height: 664.517px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="1.3333" data-base-ratio="1.3333" data-thumb-src="./thumbs/carnaval-descarte.jpg.jpg" data-full-src="./carnaval-descarte.jpg" data-medium-src="./medium/carnaval-descarte.jpg.jpg"></div></div></div>
+              </div>
+            </details>
+
+            <details class="sec-level-3">
+              <summary class="sum-level-3"><span class="sum-title-wrap"><span class="sum-arrow">▸</span><span class="sum-label">Trajetos (Pré-concepção) — Fundamentos do Registro Gráfico</span></span></summary>
+              <div class="sec-content">
+                <p>Trabalho coletivo que funcionou como estudo preparatório e experimentação formal para <em>Trajetos</em>. Durante o processo, o grupo testou soluções compositivas e recursos visuais e simbólicos — como a espiral — para conceituar os diferentes pontos de partida e trajetos individuais que se sobrepõem rumo ao destino final.</p>
+                <p><strong>Minhas participações diretas:</strong> Exploração principal das texturas e elementos de contraste, além da organização compositiva e do equilíbrio de pesos visuais.</p>
+                <div class="mosaic-grid">
+                  <div class="mosaic-row"><div class="mosaic-tile" style="height: 629.888px; width: 886px; flex: 0 0 886px;"><img data-fn="image21.jpg" alt="image21.jpg" decoding="async" style="width: 629.888px; height: 886px; transform: translate(-50%, -50%) rotate(90deg);" data-ratio="1.4066" data-base-ratio="0.7109" data-thumb-src="./thumbs/image21.jpg.jpg" data-full-src="./image21.jpg" data-medium-src="./medium/image21.jpg.jpg" data-rotation="90"></div></div></div>
+              </div>
+            </details>
+
+          </div>
+        </details>
+
+        <details class="sec-level-2">
+          <summary class="sum-level-2"><span class="sum-title-wrap"><span class="sum-arrow">▸</span><span class="sum-label">Intervenção urbana</span></span></summary>
+          <div class="sec-content">
+            <p>As intervenções urbanas tiveram como eixo central o deslocamento do olhar cotidiano: trazer à altura dos olhos o lixo que costuma permanecer invisibilizado no chão. A proposta buscou provocar os transeuntes da região central (com foco na Praça XV) a notar esses resíduos, utilizando o próprio lixo como suporte e matéria da ação — prendendo objetos descartados em postes e colando cartazes e lambe-lambes que convocam à reflexão sobre origem, consumo, impactos e políticas de cuidado ou ocultamento do espaço urbano.</p>
+            <p>Essas questões também orientam o curta-metragem produzido a partir de abordagens e relatos de pedestres no calçadão da Rua XV, discutindo as relações socioeconômicas do lixo, bem como as memórias e afetos que os objetos descartados carregam.</p>
+            
+            <details class="sec-level-3">
+              <summary class="sum-level-3"><span class="sum-title-wrap"><span class="sum-arrow">▸</span><span class="sum-label">Intervenção e Lambe-lambe (Arredores da Praça do Largo) — Tridimensional</span></span></summary>
+              <div class="sec-content">
+                <p>Nos arredores do centro de Curitiba, as intervenções foram distribuídas como uma trilha ao longo dos fluxos mais intensos de passagem, permitindo que os pedestres conectassem uma ação à outra durante o caminhar.</p>
+                <p><strong>Minhas participações diretas:</strong> Escolha estratégica dos pontos de instalação e dos modos de fixação ou escrita, pensando a cidade como suporte e a composição visual a partir do campo de visão de quem passa. Destacam-se: o uso de papelão descartado no próprio chão como suporte para um comando que direcionava o olhar ao lixo logo abaixo; a intervenção em uma escada, onde o desnível obriga o pedestre a encarar o trabalho ao descer; e a fixação de uma garrafa no poste à altura do olhar, ação que imediatamente despertou a atenção e a parada de transeuntes.</p>
+                <div class="mosaic-grid">
+                  <div class="mosaic-row"><div class="mosaic-tile" style="height: 586.667px; width: 440px; flex: 0 0 440px;"><img data-fn="intervenção-1.jpg" alt="intervenção-1.jpg" decoding="async" style="width: 440px; height: 586.667px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.7500" data-base-ratio="0.7500" data-thumb-src="./thumbs/interven%C3%A7%C3%A3o-1.jpg.jpg" data-full-src="./interven%C3%A7%C3%A3o-1.jpg" data-medium-src="./medium/interven%C3%A7%C3%A3o-1.jpg.jpg"></div><div class="mosaic-tile" style="height: 586.667px; width: 440px; flex: 0 0 440px;"><img data-fn="intervenção.jpg" alt="intervenção.jpg" decoding="async" style="width: 440px; height: 586.667px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.7500" data-base-ratio="0.7500" data-thumb-src="./thumbs/interven%C3%A7%C3%A3o.jpg.jpg" data-full-src="./interven%C3%A7%C3%A3o.jpg" data-medium-src="./medium/interven%C3%A7%C3%A3o.jpg.jpg"></div></div><div class="mosaic-break"></div><div class="mosaic-row"><div class="mosaic-tile" style="height: 388.444px; width: 291.333px; flex: 0 0 291.333px;"><img data-fn="intervenção-3.jpg" alt="intervenção-3.jpg" decoding="async" style="width: 291.333px; height: 388.444px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.7500" data-base-ratio="0.7500" data-thumb-src="./thumbs/interven%C3%A7%C3%A3o-3.jpg.jpg" data-full-src="./interven%C3%A7%C3%A3o-3.jpg" data-medium-src="./medium/interven%C3%A7%C3%A3o-3.jpg.jpg"></div><div class="mosaic-tile" style="height: 388.444px; width: 291.333px; flex: 0 0 291.333px;"><img data-fn="lambe-lambe.jpg" alt="lambe-lambe.jpg" decoding="async" style="width: 291.333px; height: 388.444px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.7500" data-base-ratio="0.7500" data-thumb-src="./thumbs/lambe-lambe.jpg.jpg" data-full-src="./lambe-lambe.jpg" data-medium-src="./medium/lambe-lambe.jpg.jpg"></div><div class="mosaic-tile" style="height: 388.444px; width: 291.333px; flex: 0 0 291.333px;"><img data-fn="intervenção-2.jpg" alt="intervenção-2.jpg" decoding="async" style="width: 291.333px; height: 388.444px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.7500" data-base-ratio="0.7500" data-thumb-src="./thumbs/interven%C3%A7%C3%A3o-2.jpg.jpg" data-full-src="./interven%C3%A7%C3%A3o-2.jpg" data-medium-src="./medium/interven%C3%A7%C3%A3o-2.jpg.jpg"></div></div></div>
+              </div>
+            </details>
+
+            <details class="sec-level-3">
+              <summary class="sum-level-3"><span class="sum-title-wrap"><span class="sum-arrow">▸</span><span class="sum-label">Curta-metragem e Mural Coletivo (Calçadão da Rua XV de Novembro)</span></span></summary>
+              <div class="sec-content">
+                <p>O curta reúne relatos gravados em áudio com pedestres que participaram da proposta do mural coletivo instalado no calçadão da Rua XV de Novembro. A ação buscou evidenciar que cada resíduo guarda uma memória, um trajeto e uma subjetividade, funcionando como vestígio dos hábitos de quem passou por ali.</p>
+                <p><strong>Minhas participações diretas:</strong> Idealização da proposta e edição de vídeo e áudio.</p>
+                <div class="video-box">
+                  <video controls="" playsinline="" preload="metadata" data-fn="curta descarte.mp4" id="portfolio-video" data-loaded="1" src="./curta%20descarte.mp4"></video>
+                  <div class="video-caption">Curta-metragem: DescArte — Relatos e Mural Coletivo (Rua XV de Novembro, 1m32s)</div>
+                </div>
+                <div class="mosaic-grid">
+                  <div class="mosaic-row"><div class="mosaic-tile" style="height: 255.81px; width: 191.857px; flex: 0 0 191.857px;"><img data-fn="IMG_2080.jpg" alt="IMG_2080.jpg" decoding="async" style="width: 191.857px; height: 255.81px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.7500" data-base-ratio="0.7500" data-thumb-src="./thumbs/IMG_2080.jpg.jpg" data-full-src="./IMG_2080.jpg" data-medium-src="./medium/IMG_2080.jpg.jpg"></div><div class="mosaic-tile" style="height: 255.81px; width: 341.071px; flex: 0 0 341.071px;"><img data-fn="IMG_2131.jpg" alt="IMG_2131.jpg" decoding="async" style="width: 341.071px; height: 255.81px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="1.3333" data-base-ratio="1.3333" data-thumb-src="./thumbs/IMG_2131.jpg.jpg" data-full-src="./IMG_2131.jpg" data-medium-src="./medium/IMG_2131.jpg.jpg"></div><div class="mosaic-tile" style="height: 255.81px; width: 341.071px; flex: 0 0 341.071px;"><img data-fn="IMG_2132.jpg" alt="IMG_2132.jpg" decoding="async" style="width: 341.071px; height: 255.81px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="1.3333" data-base-ratio="1.3333" data-thumb-src="./thumbs/IMG_2132.jpg.jpg" data-full-src="./IMG_2132.jpg" data-medium-src="./medium/IMG_2132.jpg.jpg"></div></div></div>
+              </div>
+            </details>
+          </div>
+        </details>
+
+        <details class="sec-level-2">
+          <summary class="sum-level-2"><span class="sum-title-wrap"><span class="sum-arrow">▸</span><span class="sum-label">Extras</span></span></summary>
+          <div class="sec-content">
+            
+            <details class="sec-level-3">
+              <summary class="sum-level-3"><span class="sum-title-wrap"><span class="sum-arrow">▸</span><span class="sum-label">Gravura com lixos e dejetos</span></span></summary>
+              <div class="sec-content">
+                <p>Experimentação gráfica utilizando resíduos coletados como matrizes e elementos de impressão.</p>
+                <div class="mosaic-grid">
+                  <div class="mosaic-row"><div class="mosaic-tile" style="height: 664.517px; width: 886px; flex: 0 0 886px;"><img data-fn="gravura-com-lixo.jpg" alt="gravura-com-lixo.jpg" decoding="async" style="width: 664.517px; height: 886px; transform: translate(-50%, -50%) rotate(270deg);" data-ratio="1.3333" data-base-ratio="0.7500" data-thumb-src="./thumbs/gravura-com-lixo.jpg.jpg" data-full-src="./gravura-com-lixo.jpg" data-medium-src="./medium/gravura-com-lixo.jpg.jpg" data-rotation="270"></div></div></div>
+              </div>
+            </details>
+
+            <details class="sec-level-3">
+              <summary class="sum-level-3"><span class="sum-title-wrap"><span class="sum-arrow">▸</span><span class="sum-label">Vetorização das gravuras — Tratamento de Imagem e Fundamentos da Linguagem Visual (FLV)</span></span></summary>
+              <div class="sec-content">
+                <p>Digitalização e vetorização das gravuras produzidas com resíduos para aplicação como texturas gráficas nos materiais digitais de apresentação do projeto.</p>
+                <div class="mosaic-grid">
+                  <div class="mosaic-row"><div class="mosaic-tile" style="height: 165.068px; width: 197.47px; flex: 0 0 197.47px;"><img data-fn="1txt.jpg" alt="1txt.jpg" decoding="async" style="width: 197.47px; height: 165.068px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="1.1963" data-base-ratio="1.1963" data-thumb-src="./thumbs/1txt.jpg.jpg" data-full-src="./1txt.jpg" data-medium-src="./medium/1txt.jpg.jpg"></div><div class="mosaic-tile" style="height: 165.068px; width: 162.493px; flex: 0 0 162.493px;"><img data-fn="2txt.jpg" alt="2txt.jpg" decoding="async" style="width: 162.493px; height: 165.068px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.9844" data-base-ratio="0.9844" data-thumb-src="./thumbs/2txt.jpg.jpg" data-full-src="./2txt.jpg" data-medium-src="./medium/2txt.jpg.jpg"></div><div class="mosaic-tile" style="height: 165.068px; width: 188.656px; flex: 0 0 188.656px;"><img data-fn="3txt.jpg" alt="3txt.jpg" decoding="async" style="width: 188.656px; height: 165.068px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="1.1429" data-base-ratio="1.1429" data-thumb-src="./thumbs/3txt.jpg.jpg" data-full-src="./3txt.jpg" data-medium-src="./medium/3txt.jpg.jpg"></div><div class="mosaic-tile" style="height: 165.068px; width: 161.205px; flex: 0 0 161.205px;"><img data-fn="4txt.jpg" alt="4txt.jpg" decoding="async" style="width: 161.205px; height: 165.068px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.9766" data-base-ratio="0.9766" data-thumb-src="./thumbs/4txt.jpg.jpg" data-full-src="./4txt.jpg" data-medium-src="./medium/4txt.jpg.jpg"></div><div class="mosaic-tile" style="height: 165.068px; width: 152.176px; flex: 0 0 152.176px;"><img data-fn="5txt.jpg" alt="5txt.jpg" decoding="async" style="width: 152.176px; height: 165.068px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.9219" data-base-ratio="0.9219" data-thumb-src="./thumbs/5txt.jpg.jpg" data-full-src="./5txt.jpg" data-medium-src="./medium/5txt.jpg.jpg"></div></div><div class="mosaic-row"><div class="mosaic-tile" style="height: 197.937px; width: 170.107px; flex: 0 0 170.107px;"><img data-fn="6txt.jpg" alt="6txt.jpg" decoding="async" style="width: 170.107px; height: 197.937px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.8594" data-base-ratio="0.8594" data-thumb-src="./thumbs/6txt.jpg.jpg" data-full-src="./6txt.jpg" data-medium-src="./medium/6txt.jpg.jpg"></div><div class="mosaic-tile" style="height: 197.937px; width: 194.85px; flex: 0 0 194.85px;"><img data-fn="7txt.jpg" alt="7txt.jpg" decoding="async" style="width: 194.85px; height: 197.937px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.9844" data-base-ratio="0.9844" data-thumb-src="./thumbs/7txt.jpg.jpg" data-full-src="./7txt.jpg" data-medium-src="./medium/7txt.jpg.jpg"></div><div class="mosaic-tile" style="height: 197.937px; width: 204.331px; flex: 0 0 204.331px;"><img data-fn="8txt.jpg" alt="8txt.jpg" decoding="async" style="width: 204.331px; height: 197.937px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="1.0323" data-base-ratio="1.0323" data-thumb-src="./thumbs/8txt.jpg.jpg" data-full-src="./8txt.jpg" data-medium-src="./medium/8txt.jpg.jpg"></div><div class="mosaic-tile" style="height: 197.937px; width: 209.398px; flex: 0 0 209.398px;"><img data-fn="9txt.jpg" alt="9txt.jpg" decoding="async" style="width: 209.398px; height: 197.937px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="1.0579" data-base-ratio="1.0579" data-thumb-src="./thumbs/9txt.jpg.jpg" data-full-src="./9txt.jpg" data-medium-src="./medium/9txt.jpg.jpg"></div><div class="mosaic-tile" style="height: 197.937px; width: 40.2011px; flex: 0 0 40.2011px;"><img data-fn="moldura_direita.jpg" alt="moldura_direita.jpg" decoding="async" style="width: 40.2011px; height: 197.937px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.2031" data-base-ratio="0.2031" data-thumb-src="./thumbs/moldura_direita.jpg.jpg" data-full-src="./moldura_direita.jpg" data-medium-src="./medium/moldura_direita.jpg.jpg"></div><div class="mosaic-tile" style="height: 197.937px; width: 37.1133px; flex: 0 0 37.1133px;"><img data-fn="moldura_esquerda.jpg" alt="moldura_esquerda.jpg" decoding="async" style="width: 37.1133px; height: 197.937px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.1875" data-base-ratio="0.1875" data-thumb-src="./thumbs/moldura_esquerda.jpg.jpg" data-full-src="./moldura_esquerda.jpg" data-medium-src="./medium/moldura_esquerda.jpg.jpg"></div></div></div>
+              </div>
+            </details>
+
+          </div>
+        </details>
+
+      </div>
+    </details>
+
+    <!-- SEÇÃO 2: DESENHO -->
+    <details class="sec-level-1" id="sec-desenho">
+      <summary class="sum-level-1"><span class="sum-title-wrap"><span class="sum-arrow">▸</span><span class="sum-label">Desenho — Perspectiva, Observação e Variações Gráficas</span></span></summary>
+      <div class="sec-content">
+        <p>Estudos de representação espacial e construção do olhar. A seção abrange desde a geometria de formas em perspectiva e o desenho de observação de cenários reais (como o registro da cruz da igreja) até experimentos de transfiguração gráfica e pareidolia. Inclui também esboços gestuais e estudos de variação de linguagem (registros caligráficos, geométricos e orgânicos).</p>
+        
+        <details class="sec-level-2">
+          <summary class="sum-level-2"><span class="sum-title-wrap"><span class="sum-arrow">▸</span><span class="sum-label">Perspectiva e Geometria</span></span></summary>
+          <div class="sec-content">
+            <div class="mosaic-grid">
+              <div class="mosaic-row"><div class="mosaic-tile" style="height: 390.548px; width: 219.683px; flex: 0 0 219.683px;"><img data-fn="IMG-20250430-WA0120.jpeg" alt="Perspectiva 4" style="width: 219.683px; height: 390.548px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.5625" data-base-ratio="0.5625" data-thumb-src="./thumbs/IMG-20250430-WA0120.jpeg.jpg" data-full-src="./IMG-20250430-WA0120.jpeg" data-medium-src="./medium/IMG-20250430-WA0120.jpeg.jpg"></div><div class="mosaic-tile" style="height: 390.548px; width: 694.317px; flex: 0 0 694.317px;"><img data-fn="IMG-20250507-WA0156.jpeg" alt="Perspectiva 6" style="width: 694.317px; height: 390.548px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="1.7778" data-base-ratio="1.7778" data-thumb-src="./thumbs/IMG-20250507-WA0156.jpeg.jpg" data-full-src="./IMG-20250507-WA0156.jpeg" data-medium-src="./medium/IMG-20250507-WA0156.jpeg.jpg"></div></div></div>
+          </div>
+        </details>
+
+        <details class="sec-level-2">
+          <summary class="sum-level-2"><span class="sum-title-wrap"><span class="sum-arrow">▸</span><span class="sum-label">Observação e Variações Gráficas</span></span></summary>
+          <div class="sec-content">
+            <div class="mosaic-grid">
+              <div class="mosaic-row"><div class="mosaic-tile" style="height: 251.723px; width: 188.792px; flex: 0 0 188.792px;"><img data-fn="IMG_20250514_215301.jpg" alt="Desenho Cruz" style="width: 188.792px; height: 251.723px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.7500" data-base-ratio="0.7500" data-thumb-src="./thumbs/IMG_20250514_215301.jpg.jpg" data-full-src="./IMG_20250514_215301.jpg" data-medium-src="./medium/IMG_20250514_215301.jpg.jpg"></div><div class="mosaic-tile" style="height: 251.723px; width: 188.792px; flex: 0 0 188.792px;"><img data-fn="IMG_20250925_123348.jpg" alt="Desenho Cruz Caderno" style="width: 188.792px; height: 251.723px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.7500" data-base-ratio="0.7500" data-thumb-src="./thumbs/IMG_20250925_123348.jpg.jpg" data-full-src="./IMG_20250925_123348.jpg" data-medium-src="./medium/IMG_20250925_123348.jpg.jpg"></div><div class="mosaic-tile" style="height: 251.723px; width: 335.623px; flex: 0 0 335.623px;"><img data-fn="IMG_20250910_194213.jpg" alt="Variações Gráficas Velas" style="width: 335.623px; height: 251.723px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="1.3333" data-base-ratio="1.3333" data-thumb-src="./thumbs/IMG_20250910_194213.jpg.jpg" data-full-src="./IMG_20250910_194213.jpg" data-medium-src="./medium/IMG_20250910_194213.jpg.jpg"></div><div class="mosaic-tile" style="height: 251.723px; width: 188.792px; flex: 0 0 188.792px;"><img data-fn="IMG_20250925_201909.jpg" alt="Esboço Gestual" style="width: 188.792px; height: 251.723px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.7500" data-base-ratio="0.7500" data-thumb-src="./thumbs/IMG_20250925_201909.jpg.jpg" data-full-src="./IMG_20250925_201909.jpg" data-medium-src="./medium/IMG_20250925_201909.jpg.jpg"></div></div></div>
+          </div>
+        </details>
+
+        <details class="sec-level-2">
+          <summary class="sum-level-2"><span class="sum-title-wrap"><span class="sum-arrow">▸</span><span class="sum-label">Pareidolia e Transfiguração</span></span></summary>
+          <div class="sec-content">
+            <div class="mosaic-grid">
+              <div class="mosaic-row"><div class="mosaic-tile" style="height: 216.483px; width: 288.637px; flex: 0 0 288.637px;"><img data-fn="IMG_20250918_194947.jpg" alt="Referência Paisagem" style="width: 288.637px; height: 216.483px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="1.3333" data-base-ratio="1.3333" data-thumb-src="./thumbs/IMG_20250918_194947.jpg.jpg" data-full-src="./IMG_20250918_194947.jpg" data-medium-src="./medium/IMG_20250918_194947.jpg.jpg"></div><div class="mosaic-tile" style="height: 216.483px; width: 162.363px; flex: 0 0 162.363px;"><img data-fn="IMG_20250924_221657.jpg" alt="Pareidolia 1" style="width: 162.363px; height: 216.483px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.7500" data-base-ratio="0.7500" data-thumb-src="./thumbs/IMG_20250924_221657.jpg.jpg" data-full-src="./IMG_20250924_221657.jpg" data-medium-src="./medium/IMG_20250924_221657.jpg.jpg"></div><div class="mosaic-tile" style="height: 216.483px; width: 162.363px; flex: 0 0 162.363px;"><img data-fn="IMG_20250925_193700.jpg" alt="Pareidolia 2" style="width: 162.363px; height: 216.483px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.7500" data-base-ratio="0.7500" data-thumb-src="./thumbs/IMG_20250925_193700.jpg.jpg" data-full-src="./IMG_20250925_193700.jpg" data-medium-src="./medium/IMG_20250925_193700.jpg.jpg"></div><div class="mosaic-tile" style="height: 216.483px; width: 288.637px; flex: 0 0 288.637px;"><img data-fn="IMG_20250925_203517.jpg" alt="Pareidolia 3" style="width: 216.483px; height: 288.637px; transform: translate(-50%, -50%) rotate(270deg);" data-ratio="1.3333" data-base-ratio="0.7500" data-thumb-src="./thumbs/IMG_20250925_203517.jpg.jpg" data-full-src="./IMG_20250925_203517.jpg" data-medium-src="./medium/IMG_20250925_203517.jpg.jpg" data-rotation="270"></div></div></div>
+          </div>
+        </details>
+      </div>
+    </details>
+
+    <!-- SEÇÃO 3: PINTURA -->
+    <details class="sec-level-1" id="sec-pintura">
+      <summary class="sum-level-1"><span class="sum-title-wrap"><span class="sum-arrow">▸</span><span class="sum-label">Pintura — Valoração, Cor e Paisagem</span></span></summary>
+      <div class="sec-content">
+        <p>Pesquisa pictórica focada no comportamento da luz, na valoração tonal e na materialidade da tinta. Reúne estudos de sólidos geométricos em guache (preto e branco), natureza-morta, paisagens e o processo de construção de um cenário urbano, todos em tinta a óleo.</p>
+        <div class="mosaic-grid">
+          <!-- Guache -->
+          <!-- Óleo -->
+        <div class="mosaic-row"><div class="mosaic-tile" style="height: 176.623px; width: 314px; flex: 0 0 314px;"><img data-fn="IMG-20250514-WA0131.jpeg" alt="Guache 1" style="width: 314px; height: 176.623px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="1.7778" data-base-ratio="1.7778" data-thumb-src="./thumbs/IMG-20250514-WA0131.jpeg.jpg" data-full-src="./IMG-20250514-WA0131.jpeg" data-medium-src="./medium/IMG-20250514-WA0131.jpeg.jpg"></div><div class="mosaic-tile" style="height: 176.623px; width: 314px; flex: 0 0 314px;"><img data-fn="IMG-20250514-WA0133.jpeg" alt="Guache 3" style="width: 314px; height: 176.623px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="1.7778" data-base-ratio="1.7778" data-thumb-src="./thumbs/IMG-20250514-WA0133.jpeg.jpg" data-full-src="./IMG-20250514-WA0133.jpeg" data-medium-src="./medium/IMG-20250514-WA0133.jpeg.jpg"></div><div class="mosaic-tile" style="height: 176.623px; width: 314px; flex: 0 0 314px;"><img data-fn="IMG-20250514-WA0132.jpeg" alt="Guache 2" style="width: 314px; height: 176.623px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="1.7778" data-base-ratio="1.7778" data-thumb-src="./thumbs/IMG-20250514-WA0132.jpeg.jpg" data-full-src="./IMG-20250514-WA0132.jpeg" data-medium-src="./medium/IMG-20250514-WA0132.jpeg.jpg"></div></div><div class="mosaic-row"><div class="mosaic-tile" style="height: 158.754px; width: 89.2993px; flex: 0 0 89.2993px;"><img data-fn="IMG-20250430-WA0097.jpeg" alt="Perspectiva 1" style="width: 89.2993px; height: 158.754px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.5625" data-base-ratio="0.5625" data-thumb-src="./thumbs/IMG-20250430-WA0097.jpeg.jpg" data-full-src="./IMG-20250430-WA0097.jpeg" data-medium-src="./medium/IMG-20250430-WA0097.jpeg.jpg"></div><div class="mosaic-tile" style="height: 158.754px; width: 282.234px; flex: 0 0 282.234px;"><img data-fn="IMG-20250507-WA0136.jpeg" alt="Perspectiva 5" style="width: 282.234px; height: 158.754px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="1.7778" data-base-ratio="1.7778" data-thumb-src="./thumbs/IMG-20250507-WA0136.jpeg.jpg" data-full-src="./IMG-20250507-WA0136.jpeg" data-medium-src="./medium/IMG-20250507-WA0136.jpeg.jpg"></div><div class="mosaic-tile" style="height: 158.754px; width: 282.234px; flex: 0 0 282.234px;"><img data-fn="IMG-20250430-WA0100.jpeg" alt="Perspectiva 2" style="width: 282.234px; height: 158.754px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="1.7778" data-base-ratio="1.7778" data-thumb-src="./thumbs/IMG-20250430-WA0100.jpeg.jpg" data-full-src="./IMG-20250430-WA0100.jpeg" data-medium-src="./medium/IMG-20250430-WA0100.jpeg.jpg"></div><div class="mosaic-tile" style="height: 158.754px; width: 282.234px; flex: 0 0 282.234px;"><img data-fn="IMG-20250514-WA0135.jpeg" alt="Guache 4" style="width: 282.234px; height: 158.754px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="1.7778" data-base-ratio="1.7778" data-thumb-src="./thumbs/IMG-20250514-WA0135.jpeg.jpg" data-full-src="./IMG-20250514-WA0135.jpeg" data-medium-src="./medium/IMG-20250514-WA0135.jpeg.jpg"></div></div><div class="mosaic-row"><div class="mosaic-tile" style="height: 167.155px; width: 297.168px; flex: 0 0 297.168px;"><img data-fn="IMG-20250430-WA0104.jpeg" alt="Perspectiva 3" style="width: 297.168px; height: 167.155px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="1.7778" data-base-ratio="1.7778" data-thumb-src="./thumbs/IMG-20250430-WA0104.jpeg.jpg" data-full-src="./IMG-20250430-WA0104.jpeg" data-medium-src="./medium/IMG-20250430-WA0104.jpeg.jpg"></div><div class="mosaic-tile" style="height: 167.155px; width: 125.366px; flex: 0 0 125.366px;"><img data-fn="IMG_20250903_201639.jpg" alt="Óleo Jarra Processo" style="width: 125.366px; height: 167.155px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.7500" data-base-ratio="0.7500" data-thumb-src="./thumbs/IMG_20250903_201639.jpg.jpg" data-full-src="./IMG_20250903_201639.jpg" data-medium-src="./medium/IMG_20250903_201639.jpg.jpg"></div><div class="mosaic-tile" style="height: 167.155px; width: 125.366px; flex: 0 0 125.366px;"><img data-fn="IMG_20250903_203807.jpg" alt="Óleo Jarra Final" style="width: 125.366px; height: 167.155px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.7500" data-base-ratio="0.7500" data-thumb-src="./thumbs/IMG_20250903_203807.jpg.jpg" data-full-src="./IMG_20250903_203807.jpg" data-medium-src="./medium/IMG_20250903_203807.jpg.jpg"></div><div class="mosaic-tile" style="height: 167.155px; width: 125.366px; flex: 0 0 125.366px;"><img data-fn="IMG_20251008_203335.jpg" alt="Óleo Urbano 1" style="width: 125.366px; height: 167.155px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.7500" data-base-ratio="0.7500" data-thumb-src="./thumbs/IMG_20251008_203335.jpg.jpg" data-full-src="./IMG_20251008_203335.jpg" data-medium-src="./medium/IMG_20251008_203335.jpg.jpg"></div><div class="mosaic-tile" style="height: 167.155px; width: 125.366px; flex: 0 0 125.366px;"><img data-fn="IMG_20251029_202724.jpg" alt="Óleo Urbano 2" style="width: 125.366px; height: 167.155px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.7500" data-base-ratio="0.7500" data-thumb-src="./thumbs/IMG_20251029_202724.jpg.jpg" data-full-src="./IMG_20251029_202724.jpg" data-medium-src="./medium/IMG_20251029_202724.jpg.jpg"></div><div class="mosaic-tile" style="height: 167.155px; width: 125.366px; flex: 0 0 125.366px;"><img data-fn="IMG_20251105_204152.jpg" alt="Óleo Urbano 3" style="width: 125.366px; height: 167.155px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.7500" data-base-ratio="0.7500" data-thumb-src="./thumbs/IMG_20251105_204152.jpg.jpg" data-full-src="./IMG_20251105_204152.jpg" data-medium-src="./medium/IMG_20251105_204152.jpg.jpg"></div></div><div class="mosaic-row"><div class="mosaic-tile" style="height: 418.667px; width: 314px; flex: 0 0 314px;"><img data-fn="IMG_20251112_204943.jpg" alt="Óleo Paisagem 1" style="width: 314px; height: 418.667px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.7500" data-base-ratio="0.7500" data-thumb-src="./thumbs/IMG_20251112_204943.jpg.jpg" data-full-src="./IMG_20251112_204943.jpg" data-medium-src="./medium/IMG_20251112_204943.jpg.jpg"></div><div class="mosaic-tile" style="height: 418.667px; width: 314px; flex: 0 0 314px;"><img data-fn="IMG_20251118_174050.jpg" alt="Óleo Paisagem 2" style="width: 314px; height: 418.667px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.7500" data-base-ratio="0.7500" data-thumb-src="./thumbs/IMG_20251118_174050.jpg.jpg" data-full-src="./IMG_20251118_174050.jpg" data-medium-src="./medium/IMG_20251118_174050.jpg.jpg"></div><div class="mosaic-tile" style="height: 418.667px; width: 314px; flex: 0 0 314px;"><img data-fn="IMG_20251211_184753.jpg" alt="Óleo Paisagem 3" style="width: 314px; height: 418.667px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.7500" data-base-ratio="0.7500" data-thumb-src="./thumbs/IMG_20251211_184753.jpg.jpg" data-full-src="./IMG_20251211_184753.jpg" data-medium-src="./medium/IMG_20251211_184753.jpg.jpg"></div></div></div>
+      </div>
+    </details>
+
+    <!-- SEÇÃO 4: TRIDIMENSIONAL -->
+    <details class="sec-level-1" id="sec-tridimensional">
+      <summary class="sum-level-1"><span class="sum-title-wrap"><span class="sum-arrow">▸</span><span class="sum-label">Tridimensional — Modelagem em Argila</span></span></summary>
+      <div class="sec-content">
+        <p>Experimentação com a matéria e a ocupação do espaço. Estudos de modelagem em argila com foco na experimentação figurativa (retratos, anatomia e carcaça de peixe), acompanhados de registro em vídeo do processo de criação tátil.</p>
+        <div class="mosaic-grid">
+          <div class="mosaic-row"><div class="mosaic-tile" style="height: 309.852px; width: 413.125px; flex: 0 0 413.125px;"><img data-fn="IMG-20250513-WA0116.jpg" alt="Peixe Argila" style="width: 413.125px; height: 309.852px; transform: translate(-50%, -50%) rotate(180deg);" data-ratio="1.3333" data-base-ratio="1.3333" data-thumb-src="./thumbs/IMG-20250513-WA0116.jpg.jpg" data-full-src="./IMG-20250513-WA0116.jpg" data-medium-src="./medium/IMG-20250513-WA0116.jpg.jpg" data-rotation="180"></div><div class="mosaic-tile" style="height: 309.852px; width: 174.292px; flex: 0 0 174.292px;"><img data-fn="IMG-20250527-WA0166.jpeg" alt="Rosto Argila 1" style="width: 174.292px; height: 309.852px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.5625" data-base-ratio="0.5625" data-thumb-src="./thumbs/IMG-20250527-WA0166.jpeg.jpg" data-full-src="./IMG-20250527-WA0166.jpeg" data-medium-src="./medium/IMG-20250527-WA0166.jpeg.jpg"></div><div class="mosaic-tile" style="height: 309.852px; width: 174.292px; flex: 0 0 174.292px;"><img data-fn="IMG-20250527-WA0168.jpeg" alt="Rosto Argila 2" style="width: 174.292px; height: 309.852px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.5625" data-base-ratio="0.5625" data-thumb-src="./thumbs/IMG-20250527-WA0168.jpeg.jpg" data-full-src="./IMG-20250527-WA0168.jpeg" data-medium-src="./medium/IMG-20250527-WA0168.jpeg.jpg"></div><div class="mosaic-tile" style="height: 309.852px; width: 174.292px; flex: 0 0 174.292px;"><img data-fn="IMG-20250603-WA0120.jpeg" alt="Boca Argila" style="width: 174.292px; height: 309.852px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.5625" data-base-ratio="0.5625" data-thumb-src="./thumbs/IMG-20250603-WA0120.jpeg.jpg" data-full-src="./IMG-20250603-WA0120.jpeg" data-medium-src="./medium/IMG-20250603-WA0120.jpeg.jpg"></div></div></div>
+        <div class="video-box">
+          <video controls="" playsinline="" preload="metadata" data-fn="VID-20250603-WA0116.mp4" data-loaded="1" src="./VID-20250603-WA0116.mp4"></video>
+          <div class="video-caption">Registro de processo: Modelagem em argila</div>
+        </div>
+      </div>
+    </details>
+
+    <!-- SEÇÃO 5: ILUSTRAÇÃO DIGITAL, COLAGEM E PRODUÇÃO PESSOAL -->
+    <details class="sec-level-1" id="sec-ilustracao-colagem" open="">
+      <summary class="sum-level-1"><span class="sum-title-wrap"><span class="sum-arrow">▸</span><span class="sum-label">Ilustração Digital, Colagem e Produção Pessoal</span></span></summary>
+      <div class="sec-content">
+        <p>Espaço dedicado à livre experimentação e à produção pessoal. Reúne ilustrações digitais com forte carga expressiva (em diferentes tratamentos de cor e traço), experimentações em pixel art, colagens com sobreposição de materiais, produções com stencil e spray, além da confecção de sketchbooks e cadernos de esboço.</p>
+        
+        <details class="sec-level-2">
+          <summary class="sum-level-2"><span class="sum-title-wrap"><span class="sum-arrow">▸</span><span class="sum-label">Ilustrações Digitais</span></span></summary>
+          <div class="sec-content">
+            <div class="mosaic-grid">
+              <div class="mosaic-row"><div class="mosaic-tile" style="height: 207.536px; width: 207.536px; flex: 0 0 207.536px;"><img data-fn="muri_lo.fm_1709580929_3316527674077629953_7212802599.webp" alt="Face Nuvem 1" style="width: 207.536px; height: 207.536px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="1.0000" data-base-ratio="1.0000" data-thumb-src="./muri_lo.fm_1709580929_3316527674077629953_7212802599.webp" data-full-src="./muri_lo.fm_1709580929_3316527674077629953_7212802599.webp" data-medium-src="./muri_lo.fm_1709580929_3316527674077629953_7212802599.webp"></div><div class="mosaic-tile" style="height: 207.536px; width: 207.536px; flex: 0 0 207.536px;"><img data-fn="muri_lo.fm_1709580929_3316527674077656102_7212802599.webp" alt="Face Nuvem 2" style="width: 207.536px; height: 207.536px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="1.0000" data-base-ratio="1.0000" data-thumb-src="./muri_lo.fm_1709580929_3316527674077656102_7212802599.webp" data-full-src="./muri_lo.fm_1709580929_3316527674077656102_7212802599.webp" data-medium-src="./muri_lo.fm_1709580929_3316527674077656102_7212802599.webp"></div><div class="mosaic-tile" style="height: 207.536px; width: 207.536px; flex: 0 0 207.536px;"><img data-fn="muri_lo.fm_1709580929_3316527674144609696_7212802599.webp" alt="Face Nuvem 3" style="width: 207.536px; height: 207.536px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="1.0000" data-base-ratio="1.0000" data-thumb-src="./muri_lo.fm_1709580929_3316527674144609696_7212802599.webp" data-full-src="./muri_lo.fm_1709580929_3316527674144609696_7212802599.webp" data-medium-src="./muri_lo.fm_1709580929_3316527674144609696_7212802599.webp"></div><div class="mosaic-tile" style="height: 207.536px; width: 155.652px; flex: 0 0 155.652px;"><img data-fn="IMG_20260408_022630.jpg" alt="Fantasma Biscuit" style="width: 155.652px; height: 207.536px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.7500" data-base-ratio="0.7500" data-thumb-src="./thumbs/IMG_20260408_022630.jpg.jpg" data-full-src="./IMG_20260408_022630.jpg" data-medium-src="./medium/IMG_20260408_022630.jpg.jpg"></div><div class="mosaic-tile" style="height: 207.536px; width: 116.739px; flex: 0 0 116.739px;"><img data-fn="IMG-20250617-WA0049.jpeg" alt="Esboço Digital" style="width: 116.739px; height: 207.536px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.5625" data-base-ratio="0.5625" data-thumb-src="./thumbs/IMG-20250617-WA0049.jpeg.jpg" data-full-src="./IMG-20250617-WA0049.jpeg" data-medium-src="./medium/IMG-20250617-WA0049.jpeg.jpg"></div></div><div class="mosaic-break"></div><div class="mosaic-row"><div class="mosaic-tile" style="height: 302.333px; width: 302.333px; flex: 0 0 302.333px;"><img data-fn="muri_lo.fm_1714798003_3360291660775092022_7212802599 (1).jpg" alt="Retrato 1" style="width: 302.333px; height: 302.333px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="1.0000" data-base-ratio="1.0000" data-thumb-src="./thumbs/muri_lo.fm_1714798003_3360291660775092022_7212802599%20(1).jpg.jpg" data-full-src="./muri_lo.fm_1714798003_3360291660775092022_7212802599%20(1).jpg" data-medium-src="./medium/muri_lo.fm_1714798003_3360291660775092022_7212802599%20(1).jpg.jpg"></div><div class="mosaic-tile" style="height: 302.333px; width: 302.333px; flex: 0 0 302.333px;"><img data-fn="muri_lo.fm_1714798003_3360291660951290427_7212802599.jpg" alt="Retrato 3" style="width: 302.333px; height: 302.333px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="1.0000" data-base-ratio="1.0000" data-thumb-src="./thumbs/muri_lo.fm_1714798003_3360291660951290427_7212802599.jpg.jpg" data-full-src="./muri_lo.fm_1714798003_3360291660951290427_7212802599.jpg" data-medium-src="./medium/muri_lo.fm_1714798003_3360291660951290427_7212802599.jpg.jpg"></div><div class="mosaic-tile" style="height: 302.333px; width: 302.333px; flex: 0 0 302.333px;"><img data-fn="muri_lo.fm_1714798003_3360291660775291462_7212802599.jpg" alt="Retrato 2" style="width: 302.333px; height: 302.333px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="1.0000" data-base-ratio="1.0000" data-thumb-src="./thumbs/muri_lo.fm_1714798003_3360291660775291462_7212802599.jpg.jpg" data-full-src="./muri_lo.fm_1714798003_3360291660775291462_7212802599.jpg" data-medium-src="./medium/muri_lo.fm_1714798003_3360291660775291462_7212802599.jpg.jpg"></div></div><div class="mosaic-break"></div><div class="mosaic-row"><div class="mosaic-tile" style="height: 456.5px; width: 456.5px; flex: 0 0 456.5px;"><img data-fn="IMDownloader_muri_lo.fm_post_DcAPkvsF-Vc_0.webp" alt="Ilustração PB" style="width: 456.5px; height: 456.5px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="1.0000" data-base-ratio="1.0000" data-thumb-src="./IMDownloader_muri_lo.fm_post_DcAPkvsF-Vc_0.webp" data-full-src="./IMDownloader_muri_lo.fm_post_DcAPkvsF-Vc_0.webp" data-medium-src="./IMDownloader_muri_lo.fm_post_DcAPkvsF-Vc_0.webp"></div><div class="mosaic-tile" style="height: 456.5px; width: 456.5px; flex: 0 0 456.5px;"><img data-fn="IMDownloader_muri_lo.fm_post_DcAPkvsF-Vc_1.webp" alt="Pixel Art" style="width: 456.5px; height: 456.5px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="1.0000" data-base-ratio="1.0000" data-thumb-src="./IMDownloader_muri_lo.fm_post_DcAPkvsF-Vc_1.webp" data-full-src="./IMDownloader_muri_lo.fm_post_DcAPkvsF-Vc_1.webp" data-medium-src="./IMDownloader_muri_lo.fm_post_DcAPkvsF-Vc_1.webp"></div></div></div>
+          </div>
+        </details>
+
+        <details class="sec-level-2" open="">
+          <summary class="sum-level-2"><span class="sum-title-wrap"><span class="sum-arrow">▸</span><span class="sum-label">Colagens, Stencil e Cadernos</span></span></summary>
+          <div class="sec-content">
+            <div class="mosaic-grid">
+              <div class="mosaic-row"><div class="mosaic-tile" style="height: 193.669px; width: 344.305px; flex: 0 0 344.305px;"><img data-fn="IMG-20250412-WA0082.jpg" alt="Sketchbook 5" style="width: 344.305px; height: 193.669px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="1.7778" data-base-ratio="1.7778" data-thumb-src="./thumbs/IMG-20250412-WA0082.jpg.jpg" data-full-src="./IMG-20250412-WA0082.jpg" data-medium-src="./medium/IMG-20250412-WA0082.jpg.jpg"></div><div class="mosaic-tile" style="height: 193.669px; width: 108.939px; flex: 0 0 108.939px;"><img data-fn="IMG-20250414-WA0115.jpg" alt="Sketchbook 6" style="width: 108.939px; height: 193.669px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.5625" data-base-ratio="0.5625" data-thumb-src="./thumbs/IMG-20250414-WA0115.jpg.jpg" data-full-src="./IMG-20250414-WA0115.jpg" data-medium-src="./medium/IMG-20250414-WA0115.jpg.jpg"></div><div class="mosaic-tile" style="height: 193.669px; width: 108.939px; flex: 0 0 108.939px;"><img data-fn="IMG-20250526-WA0132.jpeg" alt="Sketchbook 1" style="width: 108.939px; height: 193.669px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.5625" data-base-ratio="0.5625" data-thumb-src="./thumbs/IMG-20250526-WA0132.jpeg.jpg" data-full-src="./IMG-20250526-WA0132.jpeg" data-medium-src="./medium/IMG-20250526-WA0132.jpeg.jpg"></div><div class="mosaic-tile" style="height: 193.669px; width: 108.939px; flex: 0 0 108.939px;"><img data-fn="IMG-20250526-WA0135.jpeg" alt="Sketchbook 2" style="width: 108.939px; height: 193.669px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.5625" data-base-ratio="0.5625" data-thumb-src="./thumbs/IMG-20250526-WA0135.jpeg.jpg" data-full-src="./IMG-20250526-WA0135.jpeg" data-medium-src="./medium/IMG-20250526-WA0135.jpeg.jpg"></div><div class="mosaic-tile" style="height: 193.669px; width: 108.939px; flex: 0 0 108.939px;"><img data-fn="IMG-20250526-WA0137.jpeg" alt="Sketchbook 3" style="width: 108.939px; height: 193.669px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.5625" data-base-ratio="0.5625" data-thumb-src="./thumbs/IMG-20250526-WA0137.jpeg.jpg" data-full-src="./IMG-20250526-WA0137.jpeg" data-medium-src="./medium/IMG-20250526-WA0137.jpeg.jpg"></div><div class="mosaic-tile" style="height: 193.669px; width: 108.939px; flex: 0 0 108.939px;"><img data-fn="IMG-20250526-WA0162.jpeg" alt="Sketchbook 4" style="width: 108.939px; height: 193.669px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.5625" data-base-ratio="0.5625" data-thumb-src="./thumbs/IMG-20250526-WA0162.jpeg.jpg" data-full-src="./IMG-20250526-WA0162.jpeg" data-medium-src="./medium/IMG-20250526-WA0162.jpeg.jpg"></div></div><div class="mosaic-break"></div><div class="mosaic-row"><div class="mosaic-tile" style="height: 167.048px; width: 125.286px; flex: 0 0 125.286px;"><img data-fn="IMG_20251112_221106.jpg" alt="Colagem 1" style="width: 125.286px; height: 167.048px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.7500" data-base-ratio="0.7500" data-thumb-src="./thumbs/IMG_20251112_221106.jpg.jpg" data-full-src="./IMG_20251112_221106.jpg" data-medium-src="./medium/IMG_20251112_221106.jpg.jpg"></div><div class="mosaic-tile" style="height: 167.048px; width: 93.9643px; flex: 0 0 93.9643px;"><img data-fn="IMG_20251113_135428.jpg" alt="Colagem 2" style="width: 93.9643px; height: 167.048px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.5625" data-base-ratio="0.5625" data-thumb-src="./thumbs/IMG_20251113_135428.jpg.jpg" data-full-src="./IMG_20251113_135428.jpg" data-medium-src="./medium/IMG_20251113_135428.jpg.jpg"></div><div class="mosaic-tile" style="height: 167.048px; width: 125.286px; flex: 0 0 125.286px;"><img data-fn="IMG_20251124_214843.jpg" alt="Colagem 3" style="width: 125.286px; height: 167.048px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.7500" data-base-ratio="0.7500" data-thumb-src="./thumbs/IMG_20251124_214843.jpg.jpg" data-full-src="./IMG_20251124_214843.jpg" data-medium-src="./medium/IMG_20251124_214843.jpg.jpg"></div><div class="mosaic-tile" style="height: 167.048px; width: 93.9643px; flex: 0 0 93.9643px;"><img data-fn="IMG-20250527-WA0142.jpeg" alt="Caderno 4" style="width: 93.9643px; height: 167.048px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.5625" data-base-ratio="0.5625" data-thumb-src="./thumbs/IMG-20250527-WA0142.jpeg.jpg" data-full-src="./IMG-20250527-WA0142.jpeg" data-medium-src="./medium/IMG-20250527-WA0142.jpeg.jpg"></div><div class="mosaic-tile" style="height: 167.048px; width: 93.9643px; flex: 0 0 93.9643px;"><img data-fn="IMG-20250527-WA0135.jpeg" alt="Caderno 3" style="width: 93.9643px; height: 167.048px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.5625" data-base-ratio="0.5625" data-thumb-src="./thumbs/IMG-20250527-WA0135.jpeg.jpg" data-full-src="./IMG-20250527-WA0135.jpeg" data-medium-src="./medium/IMG-20250527-WA0135.jpeg.jpg"></div><div class="mosaic-tile" style="height: 167.048px; width: 93.9643px; flex: 0 0 93.9643px;"><img data-fn="IMDownloader_muri_lo.fm_highlight_3979244914838246261.webp" alt="Textura Cartazes" style="width: 93.9643px; height: 167.048px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.5625" data-base-ratio="0.5625" data-thumb-src="./IMDownloader_muri_lo.fm_highlight_3979244914838246261.webp" data-full-src="./IMDownloader_muri_lo.fm_highlight_3979244914838246261.webp" data-medium-src="./IMDownloader_muri_lo.fm_highlight_3979244914838246261.webp"></div><div class="mosaic-tile" style="height: 167.048px; width: 125.286px; flex: 0 0 125.286px;"><img data-fn="IMG_20260905_005715.jpg" alt="Stencil 3" style="width: 125.286px; height: 167.048px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.7500" data-base-ratio="0.7500" data-thumb-src="./thumbs/IMG_20260905_005715.jpg.jpg" data-full-src="./IMG_20260905_005715.jpg" data-medium-src="./medium/IMG_20260905_005715.jpg.jpg"></div><div class="mosaic-tile" style="height: 167.048px; width: 125.286px; flex: 0 0 125.286px;"><img data-fn="IMG_20260904_232813.jpg" alt="Stencil 2" style="width: 125.286px; height: 167.048px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.7500" data-base-ratio="0.7500" data-thumb-src="./thumbs/IMG_20260904_232813.jpg.jpg" data-full-src="./IMG_20260904_232813.jpg" data-medium-src="./medium/IMG_20260904_232813.jpg.jpg"></div></div><div class="mosaic-row"><div class="mosaic-tile" style="height: 438.247px; width: 584.315px; flex: 0 0 584.315px;"><img data-fn="IMG-20250725-WA0005.jpg" alt="Caderno Pessoal 2" style="width: 584.315px; height: 438.247px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="1.3333" data-base-ratio="1.3333" data-thumb-src="./thumbs/IMG-20250725-WA0005.jpg.jpg" data-full-src="./IMG-20250725-WA0005.jpg" data-medium-src="./medium/IMG-20250725-WA0005.jpg.jpg"></div><div class="mosaic-tile" style="height: 438.247px; width: 328.685px; flex: 0 0 328.685px;"><img data-fn="IMG-20250725-WA0000.jpg" alt="Caderno Pessoal 1" style="width: 328.685px; height: 438.247px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.7500" data-base-ratio="0.7500" data-thumb-src="./thumbs/IMG-20250725-WA0000.jpg.jpg" data-full-src="./IMG-20250725-WA0000.jpg" data-medium-src="./medium/IMG-20250725-WA0000.jpg.jpg"></div></div></div>
+          </div>
+        </details>
+      </div>
+    </details>
+
+    <!-- SEÇÃO 6: FOTOGRAFIA -->
+    <details class="sec-level-1" id="sec-fotografia" open="">
+      <summary class="sum-level-1"><span class="sum-title-wrap"><span class="sum-arrow">▸</span><span class="sum-label">Fotografia — Registros Autorais</span></span></summary>
+      <div class="sec-content">
+        <p>Registros fotográficos autorais que exploram a arquitetura, silhuetas, texturas urbanas e a natureza. O conjunto demonstra um olhar atento para a composição, o contraste entre luz e sombra e o enquadramento de elementos cotidianos.</p>
+        <div class="mosaic-grid">
+          <div class="mosaic-row"><div class="mosaic-tile" style="height: 166.112px; width: 166.112px; flex: 0 0 166.112px;"><img data-fn="muri_lo.fm_1759716576_3737095961530198927_7212802599.webp" alt="Igreja 6" style="width: 166.112px; height: 166.112px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="1.0000" data-base-ratio="1.0000" data-thumb-src="./muri_lo.fm_1759716576_3737095961530198927_7212802599.webp" data-full-src="./muri_lo.fm_1759716576_3737095961530198927_7212802599.webp" data-medium-src="./muri_lo.fm_1759716576_3737095961530198927_7212802599.webp"></div><div class="mosaic-tile" style="height: 166.112px; width: 166.112px; flex: 0 0 166.112px;"><img data-fn="muri_lo.fm_1759716576_3737095961521777895_7212802599.webp" alt="Pássaro 1" style="width: 166.112px; height: 166.112px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="1.0000" data-base-ratio="1.0000" data-thumb-src="./muri_lo.fm_1759716576_3737095961521777895_7212802599.webp" data-full-src="./muri_lo.fm_1759716576_3737095961521777895_7212802599.webp" data-medium-src="./muri_lo.fm_1759716576_3737095961521777895_7212802599.webp"></div><div class="mosaic-tile" style="height: 166.112px; width: 166.112px; flex: 0 0 166.112px;"><img data-fn="muri_lo.fm_1759716576_3737095961521799229_7212802599.webp" alt="Pássaro 2" style="width: 166.112px; height: 166.112px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="1.0000" data-base-ratio="1.0000" data-thumb-src="./muri_lo.fm_1759716576_3737095961521799229_7212802599.webp" data-full-src="./muri_lo.fm_1759716576_3737095961521799229_7212802599.webp" data-medium-src="./muri_lo.fm_1759716576_3737095961521799229_7212802599.webp"></div><div class="mosaic-tile" style="height: 166.112px; width: 93.4382px; flex: 0 0 93.4382px;"><img data-fn="IMDownloader_muri_lo.fm_highlight_3463067966355417285.webp" alt="Igreja 1" style="width: 93.4382px; height: 166.112px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="0.5625" data-base-ratio="0.5625" data-thumb-src="./IMDownloader_muri_lo.fm_highlight_3463067966355417285.webp" data-full-src="./IMDownloader_muri_lo.fm_highlight_3463067966355417285.webp" data-medium-src="./IMDownloader_muri_lo.fm_highlight_3463067966355417285.webp"></div><div class="mosaic-tile" style="height: 166.112px; width: 166.112px; flex: 0 0 166.112px;"><img data-fn="muri_lo.fm_1759716576_3737095961521751362_7212802599.webp" alt="Igreja 4" style="width: 166.112px; height: 166.112px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="1.0000" data-base-ratio="1.0000" data-thumb-src="./muri_lo.fm_1759716576_3737095961521751362_7212802599.webp" data-full-src="./muri_lo.fm_1759716576_3737095961521751362_7212802599.webp" data-medium-src="./muri_lo.fm_1759716576_3737095961521751362_7212802599.webp"></div><div class="mosaic-tile" style="height: 166.112px; width: 166.112px; flex: 0 0 166.112px;"><img data-fn="muri_lo.fm_1759716576_3737095961513400081_7212802599.webp" alt="Igreja 3" style="width: 166.112px; height: 166.112px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="1.0000" data-base-ratio="1.0000" data-thumb-src="./muri_lo.fm_1759716576_3737095961513400081_7212802599.webp" data-full-src="./muri_lo.fm_1759716576_3737095961513400081_7212802599.webp" data-medium-src="./muri_lo.fm_1759716576_3737095961513400081_7212802599.webp"></div></div><div class="mosaic-row"><div class="mosaic-tile" style="height: 314px; width: 314px; flex: 0 0 314px;"><img data-fn="muri_lo.fm_1759716836_3737098147861432668_7212802599.webp" alt="Natureza 2" style="width: 314px; height: 314px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="1.0000" data-base-ratio="1.0000" data-thumb-src="./muri_lo.fm_1759716836_3737098147861432668_7212802599.webp" data-full-src="./muri_lo.fm_1759716836_3737098147861432668_7212802599.webp" data-medium-src="./muri_lo.fm_1759716836_3737098147861432668_7212802599.webp"></div><div class="mosaic-tile" style="height: 314px; width: 314px; flex: 0 0 314px;"><img data-fn="muri_lo.fm_1759716836_3737098147920206474_7212802599.webp" alt="Urbano" style="width: 314px; height: 314px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="1.0000" data-base-ratio="1.0000" data-thumb-src="./muri_lo.fm_1759716836_3737098147920206474_7212802599.webp" data-full-src="./muri_lo.fm_1759716836_3737098147920206474_7212802599.webp" data-medium-src="./muri_lo.fm_1759716836_3737098147920206474_7212802599.webp"></div><div class="mosaic-tile" style="height: 314px; width: 314px; flex: 0 0 314px;"><img data-fn="muri_lo.fm_1759716836_3737098147844653820_7212802599.webp" alt="Natureza 1" style="width: 314px; height: 314px; transform: translate(-50%, -50%) rotate(0deg);" data-ratio="1.0000" data-base-ratio="1.0000" data-thumb-src="./muri_lo.fm_1759716836_3737098147844653820_7212802599.webp" data-full-src="./muri_lo.fm_1759716836_3737098147844653820_7212802599.webp" data-medium-src="./muri_lo.fm_1759716836_3737098147844653820_7212802599.webp"></div></div></div>
+      </div>
+    </details>
+
+  </main>
+
+  <input type="file" id="add-images-input" accept="image/*" multiple="" style="display:none;">
+
+  <div id="confirm-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal-card">
+      <p id="confirm-modal-text">Deseja realmente excluir esta imagem?</p>
+      <div class="modal-actions">
+        <button type="button" class="btn" id="confirm-cancel">Cancelar</button>
+        <button type="button" class="btn btn-danger-confirm" id="confirm-ok">Excluir</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="lightbox" class="">
+    <div class="lb-toolbar">
+      <button type="button" class="lb-btn" id="lb-zoom-in">+</button>
+      <button type="button" class="lb-btn" id="lb-zoom-out">-</button>
+      <button type="button" class="lb-btn" id="lb-zoom-reset">100%</button>
+      <button type="button" class="lb-btn" id="lb-close">Fechar</button>
+    </div>
+    <img id="lightbox-img" src="" alt="" data-rotation="180" style="transform: translate(0px, 0px) scale(1) rotate(180deg);" class="">
+  </div>
+
+  <div id="toast" role="status"></div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Chave atualizada para v30 para garantir a atualização no navegador
+      var STORAGE_KEY = 'portfolio_digital_real_v30';
+      var editMode = false;
+      var selectedSet = new Set();
+      var pendingDeleteTiles = [];
+      var pendingAddGrid = null;
+      var cachedBaseDir = null;
+
+      var modalEl = document.getElementById('confirm-modal');
+      var modalTextEl = document.getElementById('confirm-modal-text');
+      var btnConfirmOk = document.getElementById('confirm-ok');
+      var btnConfirmCancel = document.getElementById('confirm-cancel');
+      var fileInput = document.getElementById('add-images-input');
+      var btnEdit = document.getElementById('btn-toggle-edit');
+      var btnDelSelected = document.getElementById('btn-delete-selected');
+      var btnRotate = document.getElementById('btn-rotate-selected');
+      var btnMoveUp = document.getElementById('btn-move-up');
+      var btnMoveDown = document.getElementById('btn-move-down');
+
+      function showToast(msg) {
+        var t = document.getElementById('toast');
+        if (!t) return;
+        t.textContent = msg;
+        t.classList.add('show');
+        clearTimeout(window.__toastTimer);
+        window.__toastTimer = setTimeout(function() { t.classList.remove('show'); }, 4500);
+      }
+
+      var pendingGrids = new Set();
+      var layoutRaf = null;
+      function scheduleGridLayout(grid) {
+        if (!grid) return;
+        pendingGrids.add(grid);
+        if (!layoutRaf) {
+          layoutRaf = requestAnimationFrame(function() {
+            layoutRaf = null;
+            pendingGrids.forEach(function(g) { layoutJustifiedGrid(g); });
+            pendingGrids.clear();
+          });
+        }
+      }
+
+      var previewTimer = null;
+      function scheduleRefreshPreviews() {
+        clearTimeout(previewTimer);
+        previewTimer = setTimeout(refreshAllPreviews, 200);
+      }
+
+      var BASE_DIRS = ['./', './midia/', './midia_portfolio/', './images/', './fotos/'];
+      var cachedBaseDir = null;
+      function candidatePaths(fn) {
+        if (!fn) return [];
+        var enc = encodeURIComponent(fn).replace(/%2F/g, '/');
+        if (cachedBaseDir) {
+          return [cachedBaseDir + enc].concat(BASE_DIRS.filter(function(d) { return d !== cachedBaseDir; }).map(function(d) { return d + enc; }));
+        }
+        return BASE_DIRS.map(function(d) { return d + enc; });
+      }
+
+      var imageAssets = new Map();
+
+      function canvasBlob(canvas) {
+        return new Promise(function(resolve) {
+          try {
+            canvas.toBlob(function(blob) { resolve(blob || null); }, 'image/webp', 0.82);
+          } catch (e) {
+            resolve(null);
+          }
+        });
+      }
+
+      function makeResizedBlob(source, maxSide) {
+        try {
+          var ratio = Math.min(1, maxSide / Math.max(source.width, source.height));
+          var w = Math.max(1, Math.round(source.width * ratio));
+          var h = Math.max(1, Math.round(source.height * ratio));
+          var canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          var ctx = canvas.getContext('2d', { alpha: false });
+          if (!ctx) return Promise.resolve(null);
+          ctx.drawImage(source, 0, 0, w, h);
+          return canvasBlob(canvas).catch(function() { return null; });
+        } catch (e) {
+          return Promise.resolve(null);
+        }
+      }
+
+      function loadImageSource(url) {
+        return new Promise(function(resolve, reject) {
+          var probe = new Image();
+          probe.decoding = 'async';
+          probe.onload = function() { resolve(probe); };
+          probe.onerror = reject;
+          probe.src = url;
+        });
+      }
+
+      function getImageAsset(el) {
+        var fn = el.getAttribute('data-fn') || '';
+        var dataUrl = el.dataset.dataUrl || '';
+        var key = dataUrl ? 'data:' + dataUrl.slice(0, 100) + ':' + dataUrl.length : fn;
+        if (!key) return Promise.reject(new Error('Imagem sem origem'));
+        if (imageAssets.has(key)) return imageAssets.get(key);
+
+        var promise = (async function() {
+          var fullCandidates = dataUrl ? [dataUrl] : candidatePaths(fn);
+          var fullUrl = dataUrl || fullCandidates[0];
+          var source = null;
+          var sourceUrl = '';
+          var thumbUrl = '';
+          var thumbImage = null;
+
+          if (!dataUrl) {
+            var encodedName = encodeURIComponent(fn).replace(/%2F/g, '/');
+            var thumbCandidates = ['./thumbs/' + encodedName + '.jpg'];
+            for (var ti = 0; ti < thumbCandidates.length; ti++) {
+              try {
+                thumbImage = await loadImageSource(thumbCandidates[ti]);
+                thumbUrl = thumbCandidates[ti];
+                break;
+              } catch (e) {}
+            }
+          }
+
+          if (!thumbImage) {
+            for (var i = 0; i < fullCandidates.length; i++) {
+              try {
+                source = await loadImageSource(fullCandidates[i]);
+                sourceUrl = fullCandidates[i];
+                if (!dataUrl) {
+                  BASE_DIRS.forEach(function(d) {
+                    if (sourceUrl.indexOf(d) === 0) cachedBaseDir = d;
+                  });
+                }
+                break;
+              } catch (e) {}
+            }
+            if (!source) throw new Error('Arquivo não encontrado: ' + fn);
+            fullUrl = sourceUrl;
+            var thumbBlob = await makeResizedBlob(source, 128);
+            thumbUrl = thumbBlob ? URL.createObjectURL(thumbBlob) : sourceUrl;
+          }
+
+          var dimensionsSource = source || thumbImage;
+          var ratio = dimensionsSource.naturalWidth / dimensionsSource.naturalHeight;
+          var originalWidth = dimensionsSource.naturalWidth;
+          var originalHeight = dimensionsSource.naturalHeight;
+          if (thumbImage) { thumbImage.onload = thumbImage.onerror = null; thumbImage.src = ''; }
+          if (source) { source.onload = source.onerror = null; source.src = ''; }
+
+          return {
+            ratio: ratio,
+            width: originalWidth,
+            height: originalHeight,
+            thumb: thumbUrl,
+            full: fullUrl,
+            mediumPromise: null,
+            getMedium: function() {
+              if (!this.mediumPromise) {
+                var self = this;
+                var encodedName = encodeURIComponent(fn).replace(/%2F/g, '/');
+                var preparedMedium = dataUrl ? '' : './medium/' + encodedName + '.jpg';
+                this.mediumPromise = (preparedMedium
+                  ? loadImageSource(preparedMedium).then(function(img) {
+                      img.onload = img.onerror = null;
+                      return preparedMedium;
+                    }).catch(function() { return null; })
+                  : Promise.resolve(null)
+                ).then(function(preparedUrl) {
+                  if (preparedUrl) return preparedUrl;
+                  return loadImageSource(self.full).then(function(original) {
+                    return makeResizedBlob(original, Math.max(1, Math.round(Math.max(self.width, self.height) * (2 / 3))));
+                  }).then(function(blob) {
+                    return blob ? URL.createObjectURL(blob) : self.full;
+                  });
+                });
+              }
+              return this.mediumPromise;
+            }
+          };
+        })();
+
+        imageAssets.set(key, promise);
+        promise.catch(function() { imageAssets.delete(key); });
+        return promise;
+      }
+
+      function showMissingImage(el, fn) {
+        var tile = el.closest('.mosaic-tile');
+        if (tile && !tile.querySelector('.missing-label')) {
+          tile.classList.add('missing');
+          var lab = document.createElement('div');
+          lab.className = 'missing-label';
+          lab.textContent = 'Arquivo não encontrado: ' + fn;
+          tile.appendChild(lab);
+        }
+      }
+
+      function loadMediaElement(el, isVideo) {
+        if (el.dataset.loaded === '1') return;
+        if (isVideo) {
+          if (el.dataset.loaded === '1') return;
+          var videoFn = el.getAttribute('data-fn') || '';
+          if (!videoFn) return;
+          el.dataset.loaded = '1';
+          var videoPaths = candidatePaths(videoFn);
+          var videoIdx = 0;
+          function nextVideo() {
+            if (videoIdx < videoPaths.length) el.src = videoPaths[videoIdx++];
+          }
+          el.addEventListener('error', nextVideo);
+          nextVideo();
+          return;
+        }
+
+        el.dataset.loaded = '1';
+        getImageAsset(el).then(function(asset) {
+          el.dataset.ratio = asset.ratio.toFixed(4);
+          el.dataset.baseRatio = el.dataset.ratio;
+          if (el.dataset.rotation && (el.dataset.rotation === '90' || el.dataset.rotation === '270')) {
+            el.dataset.ratio = (1 / asset.ratio).toFixed(4);
+          }
+          el.dataset.thumbSrc = asset.thumb;
+          el.dataset.fullSrc = asset.full;
+          asset.getMedium().then(function(mediumUrl) {
+            el.dataset.mediumSrc = mediumUrl;
+            el.onload = function() {
+              el.onload = null;
+              if (!el.naturalWidth || !el.naturalHeight) return;
+              var realRatio = el.naturalWidth / el.naturalHeight;
+              var oldRatio = parseFloat(el.dataset.baseRatio) || 0;
+              if (Math.abs(realRatio - oldRatio) > 0.01) {
+                el.dataset.baseRatio = realRatio.toFixed(4);
+                if (el.dataset.rotation === '90' || el.dataset.rotation === '270') {
+                  el.dataset.ratio = (1 / realRatio).toFixed(4);
+                } else {
+                  el.dataset.ratio = realRatio.toFixed(4);
+                }
+                scheduleGridLayout(el.closest('.mosaic-grid'));
+              }
+            };
+            el.src = mediumUrl;
+            var tile = el.closest('.mosaic-tile');
+            if (tile) tile.classList.remove('missing');
+            scheduleGridLayout(tile ? tile.closest('.mosaic-grid') : null);
+          });
+          scheduleRefreshPreviews();
+        }).catch(function() {
+          el.dataset.loaded = '0';
+          showMissingImage(el, el.getAttribute('data-fn') || 'imagem');
+        });
+      }
+
+      var imgObserver = ('IntersectionObserver' in window) ? new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            var img = entry.target;
+            imgObserver.unobserve(img);
+            loadMediaElement(img, false);
+          }
+        });
+      }, { rootMargin: '250px 0px' }) : null;
+
+      function observeSectionImages(det) {
+        var imgs = det.querySelectorAll('.mosaic-tile img');
+        imgs.forEach(function(im) {
+          if (im.dataset.loaded === '1') return;
+          if (imgObserver) imgObserver.observe(im);
+          else loadMediaElement(im, false);
+        });
+        det.querySelectorAll('video[data-fn]').forEach(function(v) { loadMediaElement(v, true); });
+      }
+
+      function openConfirm(msg, tiles) {
+        pendingDeleteTiles = tiles;
+        modalTextEl.textContent = msg;
+        modalEl.classList.add('open');
+        modalEl.setAttribute('aria-hidden', 'false');
+      }
+      function closeConfirm() {
+        modalEl.classList.remove('open');
+        modalEl.setAttribute('aria-hidden', 'true');
+        pendingDeleteTiles = [];
+      }
+      btnConfirmCancel.addEventListener('click', closeConfirm);
+      modalEl.addEventListener('click', function(e) { if (e.target === modalEl) closeConfirm(); });
+      btnConfirmOk.addEventListener('click', function() {
+        pendingDeleteTiles.forEach(function(tile) {
+          selectedSet.delete(tile);
+          var g = tile.closest('.mosaic-grid');
+          tile.remove();
+          if (g) layoutJustifiedGrid(g);
+        });
+        updateSelectedToolbar();
+        refreshAllPreviews();
+        saveSnapshot();
+        closeConfirm();
+      });
+
+      function updateSelectedToolbar() {
+        if (editMode && selectedSet.size > 0) {
+          btnDelSelected.style.display = 'inline-block';
+          btnDelSelected.textContent = 'Excluir (' + selectedSet.size + ')';
+          btnRotate.style.display = 'inline-block';
+          btnMoveUp.style.display = 'inline-block';
+          btnMoveDown.style.display = 'inline-block';
+        } else {
+          btnDelSelected.style.display = 'none';
+          btnRotate.style.display = 'none';
+          btnMoveUp.style.display = 'none';
+          btnMoveDown.style.display = 'none';
+        }
+      }
+      
+      btnRotate.addEventListener('click', function() {
+        if (!selectedSet.size) return;
+        var gridsToUpdate = new Set();
+        selectedSet.forEach(function(tile) {
+          var img = tile.querySelector('img');
+          if (!img) return;
+          var rot = parseInt(img.dataset.rotation || '0', 10);
+          var newRot = (rot + 90) % 360;
+          img.dataset.rotation = newRot;
+          var baseRatio = parseFloat(img.dataset.baseRatio || img.dataset.ratio);
+          if (!img.dataset.baseRatio) img.dataset.baseRatio = img.dataset.ratio;
+          if (newRot === 90 || newRot === 270) {
+            img.dataset.ratio = (1 / baseRatio).toFixed(4);
+          } else {
+            img.dataset.ratio = baseRatio;
+          }
+          var g = tile.closest('.mosaic-grid');
+          if (g) gridsToUpdate.add(g);
+        });
+        gridsToUpdate.forEach(layoutJustifiedGrid);
+        refreshAllPreviews();
+        saveSnapshot();
+      });
+
+      btnMoveDown.addEventListener('click', function() {
+        if (!selectedSet.size) return;
+        var gridsToUpdate = new Set();
+        var tilesByRow = new Map();
+
+        selectedSet.forEach(function(tile) {
+          var row = tile.closest('.mosaic-row');
+          if (!row) return;
+          if (!tilesByRow.has(row)) tilesByRow.set(row, []);
+          tilesByRow.get(row).push(tile);
+        });
+
+        tilesByRow.forEach(function(tiles, row) {
+          var grid = row.closest('.mosaic-grid');
+          if (!grid) return;
+
+          if (row.querySelectorAll('.mosaic-tile').length === tiles.length && !row.nextElementSibling) {
+             return; 
+          }
+
+          var newRow = document.createElement('div');
+          newRow.className = 'mosaic-row';
+          var br = document.createElement('div');
+          br.className = 'mosaic-break';
+
+          row.parentNode.insertBefore(br, row.nextSibling);
+          row.parentNode.insertBefore(newRow, br.nextSibling);
+
+          tiles.forEach(function(t) { newRow.appendChild(t); });
+
+          gridsToUpdate.add(grid);
+        });
+
+        gridsToUpdate.forEach(layoutJustifiedGrid);
+        refreshAllPreviews();
+        saveSnapshot();
+      });
+
+      btnMoveUp.addEventListener('click', function() {
+        if (!selectedSet.size) return;
+        var gridsToUpdate = new Set();
+        var tilesByRow = new Map();
+
+        selectedSet.forEach(function(tile) {
+          var row = tile.closest('.mosaic-row');
+          if (!row) return;
+          if (!tilesByRow.has(row)) tilesByRow.set(row, []);
+          tilesByRow.get(row).push(tile);
+        });
+
+        tilesByRow.forEach(function(tiles, row) {
+          var grid = row.closest('.mosaic-grid');
+          if (!grid) return;
+
+          var prevRow = row.previousElementSibling;
+          while (prevRow && !prevRow.classList.contains('mosaic-row')) {
+            prevRow = prevRow.previousElementSibling;
+          }
+
+          if (prevRow) {
+            var curr = row.previousElementSibling;
+            if (curr && curr.classList.contains('mosaic-break')) {
+              curr.remove();
+            }
+
+            tiles.forEach(function(t) { prevRow.appendChild(t); });
+            
+            if (row.querySelectorAll('.mosaic-tile').length === 0) {
+              row.remove();
+            }
+          }
+          gridsToUpdate.add(grid);
+        });
+
+        gridsToUpdate.forEach(layoutJustifiedGrid);
+        refreshAllPreviews();
+        saveSnapshot();
+      });
+
+      btnDelSelected.addEventListener('click', function() {
+        if (!selectedSet.size) return;
+        openConfirm('Excluir ' + selectedSet.size + ' imagem(ns) selecionada(s)?', Array.from(selectedSet));
+      });
+
+      function bindTile(tile) {
+        tile.classList.add('mosaic-tile');
+        tile.setAttribute('draggable', 'true');
+        tile.querySelectorAll('.edit-sel-btn, .edit-del-btn, .missing-label').forEach(function(el) { el.remove(); });
+        tile.classList.remove('missing', 'selected', 'dragging', 'drag-over');
+
+        var img = tile.querySelector('img');
+
+        var selBtn = document.createElement('button');
+        selBtn.type = 'button';
+        selBtn.className = 'edit-sel-btn';
+        selBtn.textContent = 'OK';
+        selBtn.addEventListener('click', function(e) {
+          e.stopPropagation(); e.preventDefault();
+          if (selectedSet.has(tile)) { selectedSet.delete(tile); tile.classList.remove('selected'); }
+          else { selectedSet.add(tile); tile.classList.add('selected'); }
+          updateSelectedToolbar();
+        });
+
+        var delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.className = 'edit-del-btn';
+        delBtn.textContent = 'X';
+        delBtn.addEventListener('click', function(e) {
+          e.stopPropagation(); e.preventDefault();
+          openConfirm('Deseja realmente excluir esta imagem?', [tile]);
+        });
+
+        tile.appendChild(selBtn);
+        tile.appendChild(delBtn);
+
+        tile.addEventListener('click', function(e) {
+          if (editMode || tile.classList.contains('missing')) return;
+          e.stopPropagation();
+          if (img && (img.dataset.fullSrc || img.src)) {
+            var rot = parseInt(img.dataset.rotation || '0', 10);
+            openLightbox(img.dataset.fullSrc || img.src, rot);
+          }
+        });
+
+        tile.addEventListener('dragstart', function(e) {
+          if (!editMode) { e.preventDefault(); return; }
+          if (!selectedSet.has(tile)) {
+            selectedSet.clear();
+            selectedSet.add(tile);
+            document.querySelectorAll('.mosaic-tile.selected').forEach(function(el) { el.classList.remove('selected'); });
+            tile.classList.add('selected');
+            updateSelectedToolbar();
+          }
+          window.__dragTiles = Array.from(selectedSet);
+          window.__dragGrid = tile.closest('.mosaic-grid');
+          window.__dragTiles.forEach(function(t) { t.classList.add('dragging'); });
+          if (e.dataTransfer) { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', 'move'); }
+        });
+
+        tile.addEventListener('dragover', function(e) {
+          if (!editMode || !window.__dragTiles) return;
+          e.preventDefault();
+          tile.classList.add('drag-over');
+        });
+
+        tile.addEventListener('dragleave', function() {
+          tile.classList.remove('drag-over');
+        });
+
+        tile.addEventListener('drop', function(e) {
+          if (!editMode || !window.__dragTiles || !window.__dragTiles.length) return;
+          e.preventDefault(); e.stopPropagation();
+          tile.classList.remove('drag-over');
+          var targetGrid = tile.closest('.mosaic-grid');
+          var srcGrid = window.__dragGrid;
+          var targetRow = tile.closest('.mosaic-row');
+          if (!targetRow || window.__dragTiles.indexOf(tile) !== -1) return;
+
+          window.__dragTiles.forEach(function(dt) {
+            targetRow.insertBefore(dt, tile);
+          });
+          layoutJustifiedGrid(targetGrid);
+          if (srcGrid && srcGrid !== targetGrid) layoutJustifiedGrid(srcGrid);
+          refreshAllPreviews();
+          saveSnapshot();
+        });
+
+        tile.addEventListener('dragend', function() {
+          document.querySelectorAll('.mosaic-tile.dragging, .mosaic-tile.drag-over').forEach(function(t) {
+            t.classList.remove('dragging', 'drag-over');
+          });
+          window.__dragTiles = null;
+          refreshAllPreviews();
+          saveSnapshot();
+        });
+      }
+
+      function ensureAddRow(grid) {
+        var addRow = grid.querySelector('.add-tile-row');
+        if (!addRow) {
+          addRow = document.createElement('div');
+          addRow.className = 'add-tile-row';
+          var b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'add-tile-btn';
+          b.textContent = '+';
+          b.addEventListener('click', function(e) {
+            e.stopPropagation();
+            pendingAddGrid = grid;
+            fileInput.value = '';
+            fileInput.click();
+          });
+          addRow.appendChild(b);
+          grid.appendChild(addRow);
+        }
+        return addRow;
+      }
+
+      fileInput.addEventListener('change', function() {
+        if (!pendingAddGrid || !fileInput.files || !fileInput.files.length) return;
+        var g = pendingAddGrid;
+        Array.from(fileInput.files).forEach(function(f) {
+          var reader = new FileReader();
+          reader.onload = function(ev) {
+            var tile = document.createElement('div');
+            tile.className = 'mosaic-tile';
+            var im = document.createElement('img');
+            im.dataset.dataUrl = ev.target.result;
+            im.alt = f.name;
+            tile.appendChild(im);
+            bindTile(tile);
+            loadMediaElement(im, false);
+            var lastRow = g.querySelector('.mosaic-row:last-of-type');
+            if (!lastRow) {
+              lastRow = document.createElement('div');
+              lastRow.className = 'mosaic-row';
+              g.insertBefore(lastRow, g.querySelector('.add-tile-row'));
+            }
+            lastRow.appendChild(tile);
+            layoutJustifiedGrid(g);
+            refreshAllPreviews();
+            saveSnapshot();
+          };
+          reader.readAsDataURL(f);
+        });
+      });
+
+      function layoutJustifiedGrid(grid) {
+        if (!grid) return;
+        var addRow = ensureAddRow(grid);
+        var w = grid.clientWidth || 880;
+        var gap = 6;
+        var targetH = window.innerWidth <= 600 ? 140 : 190;
+
+        var items = [];
+        Array.from(grid.children).forEach(function(child) {
+          if (child.classList.contains('mosaic-row')) {
+            Array.from(child.children).forEach(function(t) {
+              if (t.classList.contains('mosaic-tile')) items.push(t);
+            });
+            child.remove();
+          } else if (child.classList.contains('mosaic-tile') || child.classList.contains('mosaic-break')) {
+            items.push(child);
+            child.remove();
+          }
+        });
+
+        if (!items.length) return;
+
+        var rows = [], cur = [], sumRatio = 0;
+        for (var i = 0; i < items.length; i++) {
+          var node = items[i];
+          if (node.classList.contains('mosaic-break')) {
+            if (cur.length > 0) { rows.push({ items: cur, justified: true, breakAfter: true });
+              cur = [];
+              sumRatio = 0;
+            }
+            continue;
+          }
+          if (node.classList.contains('mosaic-tile')) {
+            var t = node;
+            var im = t.querySelector('img');
+            var r = parseFloat(im && im.dataset.ratio ? im.dataset.ratio : '1.3333');
+            if (!Number.isFinite(r) || r <= 0) r = 1.3333;
+            cur.push({ t: t, r: r });
+            sumRatio += r;
+            var estW = sumRatio * targetH + gap * Math.max(0, cur.length - 1);
+            if (estW >= w && cur.length >= 2) {
+              rows.push({ items: cur, justified: true });
+              cur = [];
+              sumRatio = 0;
+            }
+          }
+        }
+        if (cur.length) rows.push({ items: cur, justified: false });
+
+        rows.forEach(function(row) {
+          var rItems = row.items;
+          var rowEl = document.createElement('div');
+          rowEl.className = 'mosaic-row';
+          rowEl.addEventListener('dragover', function(e) { if (editMode) e.preventDefault(); });
+          rowEl.addEventListener('drop', function(e) {
+            if (!editMode || !window.__dragTiles || !window.__dragTiles.length) return;
+            e.preventDefault(); e.stopPropagation();
+            var dragged = window.__dragTiles;
+            var srcGrid = window.__dragGrid;
+            dragged.forEach(function(dt) { rowEl.appendChild(dt); });
+            layoutJustifiedGrid(grid);
+            if (srcGrid && srcGrid !== grid) layoutJustifiedGrid(srcGrid);
+            refreshAllPreviews();
+            saveSnapshot();
+          });
+
+          var rSum = rItems.reduce(function(a, b) { return a + b.r; }, 0);
+          var totalGap = gap * Math.max(0, rItems.length - 1);
+          var shouldJustify = row.justified || rItems.length >= 1;
+          var rowH = shouldJustify ? (w - totalGap) / rSum : targetH;
+
+          rItems.forEach(function(item) {
+            var tileW = rowH * item.r;
+            item.t.style.height = rowH + 'px';
+            item.t.style.width = tileW + 'px';
+            item.t.style.flex = '0 0 ' + tileW + 'px';
+
+            var img = item.t.querySelector('img');
+            if (img) {
+              var rot = parseInt(img.dataset.rotation || '0', 10);
+              var iw = tileW, ih = rowH;
+              if (rot === 90 || rot === 270) { iw = rowH; ih = tileW; }
+              img.style.width = iw + 'px';
+              img.style.height = ih + 'px';
+              img.style.transform = 'translate(-50%, -50%) rotate(' + rot + 'deg)';
+            }
+            rowEl.appendChild(item.t);
+          });
+          grid.insertBefore(rowEl, addRow); if (row.breakAfter) { var brEl = document.createElement('div'); brEl.className = 'mosaic-break'; grid.insertBefore(brEl, addRow); }
+        });
+      }
+
+      function updateSummaryPreview(det) {
+        var sum = det.querySelector(':scope > summary');
+        if (!sum) return;
+        var labelEl = sum.querySelector('.sum-label');
+        if (!labelEl) {
+          var rawText = sum.textContent.trim();
+          sum.innerHTML = '<span class="sum-title-wrap"><span class="sum-arrow">▸</span><span class="sum-label">' + rawText + '</span></span>';
+        }
+
+        var prev = sum.querySelector('.sum-preview');
+        if (!prev) {
+          prev = document.createElement('span');
+          prev.className = 'sum-preview';
+          sum.appendChild(prev);
+        }
+
+        var imgs = Array.from(det.querySelectorAll('.mosaic-tile img'));
+        var titleW = sum.querySelector('.sum-title-wrap').offsetWidth || 200;
+        var sumW = sum.clientWidth || 700;
+        var avail = Math.max(0, sumW - titleW - 95);
+        var thumbStep = window.innerWidth <= 600 ? 28 : 36;
+        var count = Math.min(imgs.length, Math.max(0, Math.floor(avail / thumbStep)));
+
+        prev.innerHTML = '';
+        for (var i = 0; i < count; i++) {
+          (function(im) {
+            var p = document.createElement('img');
+            p.alt = '';
+            p.decoding = 'async';
+            p.loading = 'lazy';
+            p.width = 128;
+            p.height = 128;
+            prev.appendChild(p);
+            getImageAsset(im).then(function(asset) {
+              if (p.isConnected) p.src = asset.thumb;
+            }).catch(function() {
+              if (p.isConnected) p.remove();
+            });
+          })(imgs[i]);
+        }
+        var badge = document.createElement('span');
+        badge.className = 'sum-count';
+        var hasVid = det.querySelector('video') !== null;
+        badge.textContent = imgs.length + (imgs.length === 1 ? ' item' : ' itens') + (hasVid ? ' + vídeo' : '');
+        prev.appendChild(badge);
+      }
+
+      function refreshAllPreviews() {
+        document.querySelectorAll('details').forEach(updateSummaryPreview);
+      }
+
+      function serializeClean() {
+        var clone = document.getElementById('portfolio-root').cloneNode(true);
+        // Remove artefatos de edição
+        clone.querySelectorAll('.edit-sel-btn, .edit-del-btn, .add-tile-row, .missing-label').forEach(function(el) { el.remove(); });
+        clone.querySelectorAll('.selected, .dragging, .missing, .drag-over').forEach(function(el) { el.classList.remove('selected', 'dragging', 'missing', 'drag-over'); });
+        clone.querySelectorAll('[draggable]').forEach(function(el) { el.removeAttribute('draggable'); });
+        clone.querySelectorAll('.sum-preview').forEach(function(el) { el.remove(); });
+        
+        // Remove contenteditable para exportação limpa
+        clone.querySelectorAll('[contenteditable]').forEach(function(el) { el.removeAttribute('contenteditable'); });
+        
+        clone.querySelectorAll('img').forEach(function(im) {
+          im.removeAttribute('src');
+          delete im.dataset.loaded;
+        });
+        return clone.innerHTML;
+      }
+
+      function saveSnapshot() {
+        try {
+          localStorage.setItem(STORAGE_KEY, serializeClean());
+        } catch (e) {
+          showToast('Não foi possível salvar no navegador. Use Salvar HTML editado.');
+        }
+      }
+
+      // Carrega snapshot se existir
+      try {
+        var saved = localStorage.getItem(STORAGE_KEY);
+        if (saved && saved.trim().length > 80 && saved.indexOf('mosaic-grid') !== -1) {
+          document.getElementById('portfolio-root').innerHTML = saved;
+        }
+      } catch (e) {}
+
+      // Lógica de Alternar Modo de Edição
+      btnEdit.addEventListener('click', function() {
+        editMode = !editMode;
+        document.body.classList.toggle('edit-mode', editMode);
+        btnEdit.classList.toggle('active-edit', editMode);
+        btnEdit.textContent = editMode ? 'Concluir' : 'Editar';
+        
+        // Configura textros editáveis
+        if (editMode) {
+            document.querySelectorAll('.sum-label').forEach(el => el.setAttribute('contenteditable', 'true'));
+            document.querySelectorAll('.sec-content p, .sec-content li').forEach(el => el.setAttribute('contenteditable', 'true'));
+        } else {
+            document.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
+            selectedSet.clear();
+            document.querySelectorAll('.mosaic-tile.selected').forEach(function(el) { el.classList.remove('selected'); });
+            saveSnapshot();
+        }
+        
+        updateSelectedToolbar();
+        document.querySelectorAll('details[open] .mosaic-grid').forEach(layoutJustifiedGrid);
+      });
+
+      // Previne que o clique no título (para editar) feche/abra o accordion
+      document.querySelectorAll('.sum-label').forEach(function(label) {
+        label.addEventListener('click', function(e) {
+            if (editMode) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.focus();
+            }
+        });
+      });
+
+      // Auto-salva os textos enquanto digita
+      var textSaveTimer = null;
+      document.addEventListener('input', function(e) {
+        if (editMode && e.target.isContentEditable) {
+            clearTimeout(textSaveTimer);
+            textSaveTimer = setTimeout(function() {
+                saveSnapshot();
+                // Atualiza a badge de quantidade caso o título tenha mudado
+                var det = e.target.closest('details');
+                if(det) updateSummaryPreview(det);
+            }, 1000);
+        }
+      });
+
+      var btnSave = document.getElementById('btn-save-html');
+      if (btnSave) btnSave.addEventListener('click', function() {
+        var docClone = document.documentElement.cloneNode(true);
+        docClone.querySelector('.portfolio-root').innerHTML = serializeClean();
+        docClone.querySelector('body').classList.remove('edit-mode');
+        var be = docClone.querySelector('#btn-toggle-edit');
+        if (be) { be.classList.remove('active-edit'); be.textContent = 'Editar'; }
+        var bd = docClone.querySelector('#btn-delete-selected');
+        if (bd) bd.style.display = 'none';
+        var lbx = docClone.querySelector('#lightbox'); if (lbx) lbx.classList.remove('active');
+        var mdl = docClone.querySelector('#confirm-modal'); if (mdl) { mdl.classList.remove('open'); mdl.setAttribute('aria-hidden', 'true'); }
+        
+        var out = '<!DOCTYPE html>\n' + docClone.outerHTML;
+        var blob = new Blob([out], { type: 'text/html;charset=utf-8' });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'Portfolio_Digital.html';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(function() { URL.revokeObjectURL(a.href); }, 3000);
+        showToast('HTML salvo. Coloque-o na pasta das imagens.');
+      });
+
+      var btnReset = document.getElementById('btn-reset-snapshot');
+      if (btnReset) btnReset.addEventListener('click', function() {
+        if (window.confirm('Descartar alterações salvas neste navegador e restaurar o conteúdo original?')) {
+          try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+          location.reload();
+        }
+      });
+
+      document.querySelectorAll('.mosaic-tile').forEach(bindTile);
+      document.querySelectorAll('.mosaic-grid').forEach(ensureAddRow);
+      refreshAllPreviews();
+
+      window.addEventListener('resize', function() {
+        document.querySelectorAll('details[open] .mosaic-grid').forEach(layoutJustifiedGrid);
+        scheduleRefreshPreviews();
+      });
+
+      document.getElementById('btn-open-all').addEventListener('click', function() {
+        document.querySelectorAll('details').forEach(function(d) {
+          d.open = true;
+          observeSectionImages(d);
+        });
+        document.querySelectorAll('.mosaic-grid').forEach(layoutJustifiedGrid);
+      });
+      document.getElementById('btn-close-all').addEventListener('click', function() {
+        document.querySelectorAll('details').forEach(function(d) { d.open = false; });
+      });
+
+      document.querySelectorAll('details').forEach(function(d) {
+        d.addEventListener('toggle', function() {
+          if (d.open) {
+            observeSectionImages(d);
+            d.querySelectorAll('.mosaic-grid').forEach(layoutJustifiedGrid);
+          }
+          updateSummaryPreview(d);
+        });
+      });
+
+      var lb = document.getElementById('lightbox');
+      var lbImg = document.getElementById('lightbox-img');
+      var scale = 1, posX = 0, posY = 0, dragging = false, sx = 0, sy = 0;
+
+      function applyView() { var rot = parseInt(lbImg.dataset.rotation || '0', 10); lbImg.style.transform = 'translate(' + posX + 'px, ' + posY + 'px) scale(' + scale + ') rotate(' + rot + 'deg)'; }
+      function resetView() { scale = 1; posX = 0; posY = 0; applyView(); }
+      function openLightbox(src, rot) { if (!src) return; resetView(); lbImg.src = src; lbImg.dataset.rotation = rot || 0; applyView(); lb.classList.add('active'); }
+      function closeLb() { lb.classList.remove('active'); lbImg.src = ''; resetView(); }
+      window.openLightbox = openLightbox;
+
+      document.getElementById('lb-zoom-in').addEventListener('click', function(e) {
+        e.stopPropagation(); scale = Math.min(5, +(scale + 0.4).toFixed(2)); applyView();
+      });
+      document.getElementById('lb-zoom-out').addEventListener('click', function(e) {
+        e.stopPropagation(); scale = Math.max(1, +(scale - 0.4).toFixed(2)); if (scale === 1) { posX = 0; posY = 0; } applyView();
+      });
+      document.getElementById('lb-zoom-reset').addEventListener('click', function(e) {
+        e.stopPropagation(); resetView();
+      });
+      document.getElementById('lb-close').addEventListener('click', function(e) {
+        e.stopPropagation(); closeLb();
+      });
+      lb.addEventListener('click', function(e) { if (e.target === lb) closeLb(); });
+      lb.addEventListener('wheel', function(e) {
+        if (!lb.classList.contains('active')) return;
+        e.preventDefault();
+        scale = Math.min(5, Math.max(1, +(scale + (e.deltaY < 0 ? 0.25 : -0.25)).toFixed(2)));
+        if (scale === 1) { posX = 0; posY = 0; }
+        applyView();
+      }, { passive: false });
+
+      lbImg.addEventListener('pointerdown', function(e) {
+        if (scale <= 1) return;
+        dragging = true; sx = e.clientX - posX; sy = e.clientY - posY;
+        lbImg.classList.add('dragging'); lbImg.setPointerCapture(e.pointerId);
+      });
+      lbImg.addEventListener('pointermove', function(e) {
+        if (!dragging) return;
+        posX = e.clientX - sx; posY = e.clientY - sy; applyView();
+      });
+      lbImg.addEventListener('pointerup', function() { dragging = false; lbImg.classList.remove('dragging'); });
+      lbImg.addEventListener('pointercancel', function() { dragging = false; lbImg.classList.remove('dragging'); });
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && lb.classList.contains('active')) closeLb();
+      });
+    });
+  </script>
+
+</body></html>

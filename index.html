@@ -300,7 +300,7 @@
     <div class="topbar-inner">
       <h1 class="doc-main-title">Portfólio Digital</h1>
       <div class="controls">
-        <button type="button" class="btn" id="btn-toggle-edit">Editar</button>
+        <button type="button" class="btn" id="btn-toggle-edit">Editar</button>`r`n        <button type="button" class="btn" id="btn-save-header" style="display: none;">Salvar HTML</button>
         <button type="button" class="btn" id="btn-rotate-selected" style="display: none;">Rotacionar 90</button>
         <button type="button" class="btn" id="btn-move-up" style="display: none;">Mover p/ Cima</button>
         <button type="button" class="btn" id="btn-move-down" style="display: none;">Mover p/ Baixo</button>
@@ -310,12 +310,6 @@
       </div>
     </div>
   </header>
-
-  <div class="edit-bar edit-only">
-    <button type="button" class="btn" id="btn-save-html">Salvar HTML editado</button>
-    <button type="button" class="btn" id="btn-reset-snapshot">Restaurar original</button>
-    <span class="edit-hint">Arraste as imagens para reorganizar. Clique nos textos (títulos e descrições) para editá-los diretamente.</span>
-  </div>
 
   <main class="portfolio-root" id="portfolio-root">
     
@@ -872,6 +866,7 @@
       btnConfirmCancel.addEventListener('click', closeConfirm);
       modalEl.addEventListener('click', function(e) { if (e.target === modalEl) closeConfirm(); });
       btnConfirmOk.addEventListener('click', function() {
+        markDirty();
         pendingDeleteTiles.forEach(function(tile) {
           selectedSet.delete(tile);
           var g = tile.closest('.mosaic-grid');
@@ -880,7 +875,6 @@
         });
         updateSelectedToolbar();
         refreshAllPreviews();
-        saveSnapshot();
         closeConfirm();
       });
 
@@ -919,9 +913,9 @@
           if (g) gridsToUpdate.add(g);
         });
         gridsToUpdate.forEach(layoutJustifiedGrid);
+        markDirty();
         refreshAllPreviews();
-        saveSnapshot();
-      });
+        });
 
       btnMoveDown.addEventListener('click', function() {
         if (!selectedSet.size) return;
@@ -957,9 +951,9 @@
         });
 
         gridsToUpdate.forEach(layoutJustifiedGrid);
+        markDirty();
         refreshAllPreviews();
-        saveSnapshot();
-      });
+        });
 
       btnMoveUp.addEventListener('click', function() {
         if (!selectedSet.size) return;
@@ -998,9 +992,9 @@
         });
 
         gridsToUpdate.forEach(layoutJustifiedGrid);
+        markDirty();
         refreshAllPreviews();
-        saveSnapshot();
-      });
+        });
 
       btnDelSelected.addEventListener('click', function() {
         if (!selectedSet.size) return;
@@ -1087,8 +1081,7 @@
           layoutJustifiedGrid(targetGrid);
           if (srcGrid && srcGrid !== targetGrid) layoutJustifiedGrid(srcGrid);
           refreshAllPreviews();
-          saveSnapshot();
-        });
+          });
 
         tile.addEventListener('dragend', function() {
           document.querySelectorAll('.mosaic-tile.dragging, .mosaic-tile.drag-over').forEach(function(t) {
@@ -1096,8 +1089,7 @@
           });
           window.__dragTiles = null;
           refreshAllPreviews();
-          saveSnapshot();
-        });
+          });
       }
 
       function ensureAddRow(grid) {
@@ -1122,6 +1114,7 @@
       }
 
       fileInput.addEventListener('change', function() {
+        markDirty();
         if (!pendingAddGrid || !fileInput.files || !fileInput.files.length) return;
         var g = pendingAddGrid;
         Array.from(fileInput.files).forEach(function(f) {
@@ -1144,8 +1137,7 @@
             lastRow.appendChild(tile);
             layoutJustifiedGrid(g);
             refreshAllPreviews();
-            saveSnapshot();
-          };
+            };
           reader.readAsDataURL(f);
         });
       });
@@ -1213,8 +1205,7 @@
             layoutJustifiedGrid(grid);
             if (srcGrid && srcGrid !== grid) layoutJustifiedGrid(srcGrid);
             refreshAllPreviews();
-            saveSnapshot();
-          });
+            });
 
           var rSum = rItems.reduce(function(a, b) { return a + b.r; }, 0);
           var totalGap = gap * Math.max(0, rItems.length - 1);
@@ -1311,43 +1302,15 @@
         return clone.innerHTML;
       }
 
-      function saveSnapshot() {
-        try {
-          localStorage.setItem(STORAGE_KEY, serializeClean());
-        } catch (e) {
+       catch (e) {
           showToast('Não foi possível salvar no navegador. Use Salvar HTML editado.');
         }
       }
 
-      // Carrega snapshot se existir
-      try {
-        var saved = localStorage.getItem(STORAGE_KEY);
-        if (saved && saved.trim().length > 80 && saved.indexOf('mosaic-grid') !== -1) {
-          document.getElementById('portfolio-root').innerHTML = saved;
-        }
-      } catch (e) {}
+      
 
       // Lógica de Alternar Modo de Edição
-      btnEdit.addEventListener('click', function() {
-        editMode = !editMode;
-        document.body.classList.toggle('edit-mode', editMode);
-        btnEdit.classList.toggle('active-edit', editMode);
-        btnEdit.textContent = editMode ? 'Concluir' : 'Editar';
-        
-        // Configura textros editáveis
-        if (editMode) {
-            document.querySelectorAll('.sum-label').forEach(el => el.setAttribute('contenteditable', 'true'));
-            document.querySelectorAll('.sec-content p, .sec-content li').forEach(el => el.setAttribute('contenteditable', 'true'));
-        } else {
-            document.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
-            selectedSet.clear();
-            document.querySelectorAll('.mosaic-tile.selected').forEach(function(el) { el.classList.remove('selected'); });
-            saveSnapshot();
-        }
-        
-        updateSelectedToolbar();
-        document.querySelectorAll('details[open] .mosaic-grid').forEach(layoutJustifiedGrid);
-      });
+      var hasUnsavedChanges = false; var btnSaveHeader = document.getElementById('btn-save-header'); function markDirty() { hasUnsavedChanges = true; } function markClean() { hasUnsavedChanges = false; } function syncEditUI() { document.body.classList.toggle('edit-mode', editMode); btnEdit.classList.toggle('active-edit', editMode); btnEdit.textContent = editMode ? 'Concluir' : 'Editar'; if (btnSaveHeader) { btnSaveHeader.style.display = editMode ? 'inline-block' : 'none'; } if (editMode) { document.querySelectorAll('.sum-label').forEach(function(el) { el.setAttribute('contenteditable', 'true'); }); document.querySelectorAll('.sec-content p, .sec-content li').forEach(function(el) { el.setAttribute('contenteditable', 'true'); }); } else { document.querySelectorAll('[contenteditable]').forEach(function(el) { el.removeAttribute('contenteditable'); }); selectedSet.clear(); document.querySelectorAll('.mosaic-tile.selected').forEach(function(el) { el.classList.remove('selected'); }); } updateSelectedToolbar(); document.querySelectorAll('details[open] .mosaic-grid').forEach(layoutJustifiedGrid); } function exportPortfolioHtml() { var docClone = document.documentElement.cloneNode(true); docClone.querySelector('.portfolio-root').innerHTML = serializeClean(); docClone.querySelector('body').classList.remove('edit-mode'); var be = docClone.querySelector('#btn-toggle-edit'); if (be) { be.classList.remove('active-edit'); be.textContent = 'Editar'; } var bsh = docClone.querySelector('#btn-save-header'); if (bsh) bsh.style.display = 'none'; var bd = docClone.querySelector('#btn-delete-selected'); if (bd) bd.style.display = 'none'; var lbx = docClone.querySelector('#lightbox'); if (lbx) lbx.classList.remove('active'); var mdl = docClone.querySelector('#confirm-modal'); if (mdl) { mdl.classList.remove('open'); mdl.setAttribute('aria-hidden', 'true'); } var out = '<!DOCTYPE html>\n' + docClone.outerHTML; var blob = new Blob([out], { type: 'text/html;charset=utf-8' }); var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'index.html'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function() { URL.revokeObjectURL(a.href); }, 3000); markClean(); showToast('HTML salvo como index.html.'); } if (btnSaveHeader) { btnSaveHeader.addEventListener('click', exportPortfolioHtml); } btnEdit.addEventListener('click', function() { if (editMode && hasUnsavedChanges) { if (window.confirm('Você fez alterações e ainda não salvou o HTML. Deseja baixar o HTML agora antes de sair do modo de edição?')) { exportPortfolioHtml(); } } editMode = !editMode; syncEditUI(); }); window.addEventListener('beforeunload', function(e) { if (!hasUnsavedChanges) return; e.preventDefault(); e.returnValue = 'Você tem alterações não salvas. Deseja salvar o HTML antes de sair?'; return e.returnValue; });
 
       // Previne que o clique no título (para editar) feche/abra o accordion
       document.querySelectorAll('.sum-label').forEach(function(label) {
@@ -1365,8 +1328,8 @@
       document.addEventListener('input', function(e) {
         if (editMode && e.target.isContentEditable) {
             clearTimeout(textSaveTimer);
+            markDirty();
             textSaveTimer = setTimeout(function() {
-                saveSnapshot();
                 // Atualiza a badge de quantidade caso o título tenha mudado
                 var det = e.target.closest('details');
                 if(det) updateSummaryPreview(det);
@@ -1400,10 +1363,7 @@
 
       var btnReset = document.getElementById('btn-reset-snapshot');
       if (btnReset) btnReset.addEventListener('click', function() {
-        if (window.confirm('Descartar alterações salvas neste navegador e restaurar o conteúdo original?')) {
-          try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
-          location.reload();
-        }
+        
       });
 
       document.querySelectorAll('.mosaic-tile').forEach(bindTile);
